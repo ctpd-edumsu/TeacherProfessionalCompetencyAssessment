@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบประเมินสมรรถนะทางวิชาชีพครู</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/5.0.0-beta3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo-container img {
+            width: 120px;
+            height: auto;
+        }
+        .logo-container p {
+            font-size: 14px;
+            color: #555;
+        }
+        .card-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .card {
+            flex: 1;
+            margin: 10px;
+            max-width: 23%;
+            background-color: #fff3e0;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .icon {
+            font-size: 50px;
+            color: #ff9800;
+        }
+        .card-title {
+            color: #e65100;
+        }
+        .card-title span {
+            color: #000;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .card h5 {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        @media (max-width: 1200px) {
+            .card {
+                max-width: 48%;
+            }
+        }
+        @media (max-width: 768px) {
+            .card {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="logo-container">
+            <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo">
+            <p>ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม</p>
+        </div>
+        
+        <h1 class="text-center mb-4">แบบประเมินสมรรถนะทางวิชาชีพครู</h1>
+        
+        <div class="card-container">
+            <div class="card" onclick="window.open('forEducationalSupervisor.html', '_blank')">
+                <div class="card-body text-center">
+                    <i class="fa fa-pencil-square-o icon" aria-hidden="true"></i>
+                    <h5 class="card-title mt-3">แบบประเมินสมรรถนะทางวิชาชีพครู <span>(สำหรับอาจารย์นิเทศก์)</span></h5>
+                </div>
+            </div>
+            <div class="card" onclick="window.open('forSchoolAdministrator.html', '_blank')">
+                <div class="card-body text-center">
+                    <i class="fa fa-pencil-square-o icon" aria-hidden="true"></i>
+                    <h5 class="card-title mt-3">แบบประเมินสมรรถนะทางวิชาชีพครู <span>(สำหรับผู้บริหารสถานศึกษา หรือผู้ที่ผู้บริหารสถานศึกษามอบหมายโดยไม่ใช่ครูพี่เลี้ยง)</span></h5>
+                </div>
+            </div>
+            <div class="card" onclick="window.open('forSchoolRepresentative.html', '_blank')">
+                <div class="card-body text-center">
+                    <i class="fa fa-pencil-square-o icon" aria-hidden="true"></i>
+                    <h5 class="card-title mt-3">แบบประเมินสมรรถนะทางวิชาชีพครู <span>(สำหรับผู้แทนสถานศึกษา)</span></h5>
+                </div>
+            </div>
+            <div class="card" onclick="window.open('forTeacher.html', '_blank')">
+                <div class="card-body text-center">
+                    <i class="fa fa-pencil-square-o icon" aria-hidden="true"></i>
+                    <h5 class="card-title mt-3">แบบประเมินสมรรถนะทางวิชาชีพครู <span>(สำหรับครูพี่เลี้ยง)</span></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.0.0-beta3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
