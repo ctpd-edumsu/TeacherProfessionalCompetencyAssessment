@@ -113,7 +113,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8 col-sm-12">
                 <div class="form-container">
-                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู</h1>
+                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 1</h1>
                     <h4 class="text-center">(สำหรับครูพี่เลี้ยง)</h4>
 
                     <!-- Search input for typing name -->
@@ -136,92 +136,95 @@
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
-        const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/Form Responses 1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
-        const suggestionsContainer = document.getElementById('suggestions');
-        const evaluationButton = document.getElementById('evaluationButton');
-        let data = [];
-        let evaluatedNames = [];
+document.addEventListener('DOMContentLoaded', function() {
+    const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
+    const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/Form Responses 1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
+    const suggestionsContainer = document.getElementById('suggestions');
+    const evaluationButton = document.getElementById('evaluationButton');
+    let data = [];
+    let evaluatedNames = [];
 
-        // Fetch data from the second Google Sheets API (evaluated names)
-        fetch(apiUrl2)
-            .then(response => response.json())
-            .then(data => {
-                const rows = data.values;
-                // Extract evaluated first and last names (columns C and D) and check if column F equals 'ครูพี่เลี้ยง'
-                evaluatedNames = rows.slice(1).map(row => ({
-                    firstName: row[4],  // Column C
-                    lastName: row[5],   // Column D
-                    status: row[1]      // Column F (status)
-                })).filter(evaluated => evaluated.status === 'ครูพี่เลี้ยง'); // Only keep those where column F is 'ครูพี่เลี้ยง'
-            })
-            .then(() => {
-                // After fetching evaluated names, fetch the main data
-                fetch(apiUrl1)
-                    .then(response => response.json())
-                    .then(dataResponse => {
-                        const rows = dataResponse.values;
+    // Fetch data from the second Google Sheets API (evaluated names)
+    fetch(apiUrl2)
+        .then(response => response.json())
+        .then(data => {
+            const rows = data.values;
+            evaluatedNames = rows.slice(1).map(row => ({
+                firstName: row[4],  // First name in column 4 (E)
+                lastName: row[5],   // Last name in column 5 (F)
+                status: row[1],     // Status in column 1 (B)
+                time: row[2]        // Time in column 2 (C)
+            })).filter(evaluated => 
+                evaluated.status === 'ครูพี่เลี้ยง' && 
+                evaluated.time === 'ครั้งที่ ๑ : สัปดาห์ที่ 3 - 5 ของภาคเรียน'
+            ); // Filter based on status and time
+        })
+        .then(() => {
+            // After fetching evaluated names, fetch the main data
+            fetch(apiUrl1)
+                .then(response => response.json())
+                .then(dataResponse => {
+                    const rows = dataResponse.values;
 
-                        // Store the data for further filtering during search
-                        data = rows.slice(1).filter(row => {
-                            const firstName = row[1]; // Column B (first name)
-                            const lastName = row[2];  // Column C (last name)
+                    // Store the data for further filtering during search
+                    data = rows.slice(1).filter(row => {
+                        const firstName = row[1]; // Column B (first name)
+                        const lastName = row[2];  // Column C (last name)
 
-                            // Check if this name is already evaluated and status is 'ครูพี่เลี้ยง'
-                            const isEvaluated = evaluatedNames.some(evaluated => 
-                                evaluated.firstName === firstName && evaluated.lastName === lastName
-                            );
+                        // Check if this name is already evaluated and matches the conditions
+                        const isEvaluated = evaluatedNames.some(evaluated => 
+                            evaluated.firstName === firstName && evaluated.lastName === lastName
+                        );
 
-                            // Only keep names that have not been evaluated
-                            return !isEvaluated;
-                        });
-                    })
-                    .catch(error => console.error('Error fetching main data:', error));
-            })
-            .catch(error => console.error('Error fetching evaluation data:', error));
+                        // Only keep names that have not been evaluated
+                        return !isEvaluated;
+                    });
+                })
+                .catch(error => console.error('Error fetching main data:', error));
+        })
+        .catch(error => console.error('Error fetching evaluation data:', error));
 
-        // Show suggestions based on input
-        async function showSuggestions() {
-            const input = document.getElementById('search-name').value.toLowerCase().trim();
-            suggestionsContainer.innerHTML = '';
+    // Show suggestions based on input
+    async function showSuggestions() {
+        const input = document.getElementById('search-name').value.toLowerCase().trim();
+        suggestionsContainer.innerHTML = '';
 
-            if (input === "") {
-                suggestionsContainer.style.display = 'none';
-                return;
-            }
-
-            // Filter names based on input
-            const matches = data.filter(row => row[3].toLowerCase().includes(input)); // Column D (full name)
-
-            if (matches.length > 0) {
-                matches.forEach(match => {
-                    const suggestionItem = document.createElement('div');
-                    suggestionItem.className = 'list-group-item';
-                    suggestionItem.textContent = match[3]; // Show name from column D
-                    suggestionItem.onclick = () => {
-                        document.getElementById('search-name').value = match[3]; // Set the input value
-                        evaluationButton.disabled = false;
-evaluationButton.onclick = function() {
-    const selectedLink = match[6]; // Column F (evaluation link)
-    window.open(selectedLink, '_blank'); // Open link in a new tab
-    evaluationButton.disabled = true; // Disable the button after click
-    document.getElementById('search-name').value = ''; // Clear the input field
-};
-
-                        suggestionsContainer.style.display = 'none';
-                    };
-                    suggestionsContainer.appendChild(suggestionItem);
-                });
-                suggestionsContainer.style.display = 'block';
-            } else {
-                suggestionsContainer.style.display = 'none';
-            }
+        if (input === "") {
+            suggestionsContainer.style.display = 'none';
+            return;
         }
 
-        // Attach the showSuggestions function to window for global scope
-        window.showSuggestions = showSuggestions;
-    });
+        // Filter names based on input
+        const matches = data.filter(row => row[3].toLowerCase().includes(input)); // Column D (full name)
+
+        if (matches.length > 0) {
+            matches.forEach(match => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'list-group-item';
+                suggestionItem.textContent = match[3]; // Show name from column D
+                suggestionItem.onclick = () => {
+                    document.getElementById('search-name').value = match[3]; // Set the input value
+                    evaluationButton.disabled = false;
+                    evaluationButton.onclick = function() {
+                        const selectedLink = match[6]; // Column F (evaluation link)
+                        window.open(selectedLink, '_blank'); // Open link in a new tab
+                        evaluationButton.disabled = true; // Disable the button after click
+                        document.getElementById('search-name').value = ''; // Clear the input field
+                    };
+
+                    suggestionsContainer.style.display = 'none';
+                };
+                suggestionsContainer.appendChild(suggestionItem);
+            });
+            suggestionsContainer.style.display = 'block';
+        } else {
+            suggestionsContainer.style.display = 'none';
+        }
+    }
+
+    // Attach the showSuggestions function to window for global scope
+    window.showSuggestions = showSuggestions;
+});
     </script>
 </body>
 </html>
