@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('search-name').value = match[3]; // Set the input value
                     evaluationButton.disabled = false;
                     evaluationButton.onclick = function() {
-                        const selectedLink = match[6]; // Column F (evaluation link)
+                        const selectedLink = match[7]; // Column F (evaluation link)
                         window.open(selectedLink, '_blank'); // Open link in a new tab
                         evaluationButton.disabled = true; // Disable the button after click
                         document.getElementById('search-name').value = ''; // Clear the input field
