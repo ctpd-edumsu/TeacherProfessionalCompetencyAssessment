@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบประเมินสมรรถนะทางวิชาชีพครู (สำหรับครูพี่เลี้ยง)</title>
+    <title>แบบประเมินสมรรถนะทางวิชาชีพครู (สำหรับอาจารย์นิเทศก์)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -113,8 +113,8 @@
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8 col-sm-12">
                 <div class="form-container">
-                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 1</h1>
-                    <h4 class="text-center">(สำหรับครูพี่เลี้ยง)</h4>
+                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 2</h1>
+                    <h4 class="text-center">(สำหรับอาจารย์นิเทศก์)</h4>
 
                     <!-- Search input for typing name -->
                     <div class="mb-3 position-relative">
@@ -136,7 +136,7 @@
     </div>
 
     <script>
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
     const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/Form Responses 1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
     const suggestionsContainer = document.getElementById('suggestions');
@@ -155,8 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 status: row[1],     // Status in column 1 (B)
                 time: row[2]        // Time in column 2 (C)
             })).filter(evaluated => 
-                evaluated.status === 'ครูพี่เลี้ยง' && 
-                evaluated.time === 'ครั้งที่ ๑ : สัปดาห์ที่ 3 - 5 ของภาคเรียน'
+                evaluated.status === 'อาจารย์นิเทศก์' && 
+                evaluated.time === 'ครั้งที่ ๒ : สัปดาห์ที่ 7 - 9 ของภาคเรียน'
             ); // Filter based on status and time
         })
         .then(() => {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('search-name').value = match[3]; // Set the input value
                     evaluationButton.disabled = false;
                     evaluationButton.onclick = function() {
-                        const selectedLink = match[6]; //(evaluation link)
+                        const selectedLink = match[9]; // (evaluation link)
                         window.open(selectedLink, '_blank'); // Open link in a new tab
                         evaluationButton.disabled = true; // Disable the button after click
                         document.getElementById('search-name').value = ''; // Clear the input field
@@ -225,6 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Attach the showSuggestions function to window for global scope
     window.showSuggestions = showSuggestions;
 });
+
     </script>
 </body>
 </html>
+
