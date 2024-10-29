@@ -138,7 +138,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
     const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
-    const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/Form Responses 1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
+    const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/Sheetresult?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
     const suggestionsContainer = document.getElementById('suggestions');
     const evaluationButton = document.getElementById('evaluationButton');
     let data = [];
@@ -150,10 +150,10 @@
         .then(data => {
             const rows = data.values;
             evaluatedNames = rows.slice(1).map(row => ({
-                firstName: row[4],  // First name in column 4 (E)
-                lastName: row[5],   // Last name in column 5 (F)
-                status: row[1],     // Status in column 1 (B)
-                time: row[2]        // Time in column 2 (C)
+                firstName: row[0],  // First name in column 4 (E)
+                lastName: row[1],   // Last name in column 5 (F)
+                status: row[2],     // Status in column 1 (B)
+                time: row[3]        // Time in column 2 (C)
             })).filter(evaluated => 
                 evaluated.status === 'อาจารย์นิเทศก์' && 
                 evaluated.time === 'ครั้งที่ ๒ : สัปดาห์ที่ 7 - 9 ของภาคเรียน'
