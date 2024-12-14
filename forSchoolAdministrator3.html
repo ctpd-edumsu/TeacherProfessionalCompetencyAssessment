@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบประเมินสมรรถนะทางวิชาชีพครู (สำหรับผู้บริหารสถานศึกษา หรือ ผู้ที่ผู้บริหารสถานศึกษามอบหมายโดยไม่ใช่ครูพี่เลี้ยง)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #FFE5B4; /* Light orange background */
+            font-family: 'Arial', sans-serif;
+        }
+
+        h1 {
+            color: #FF8C00; /* Dark orange color */
+        }
+
+        .form-label {
+            color: #FF4500; /* Orange-red label color */
+        }
+
+        .btn-primary {
+            background-color: #FF8C00; /* Dark orange button */
+            border-color: #FF8C00;
+        }
+
+        .btn-primary:hover {
+            background-color: #FF4500; /* Darker orange on hover */
+            border-color: #FF4500;
+        }
+
+        /* Styling for form container */
+        .form-container {
+            background-color: white; /* White background for form */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+
+        /* Styling for suggestion list */
+        #suggestions {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .list-group-item {
+            cursor: pointer;
+        }
+
+        .list-group-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        h4 {
+        margin-bottom: 25px; /* Increase spacing below subtitle */
+    }
+
+    .form-label {
+        margin-top: 5px; /* Add some space above the label */
+    }
+    
+    /* Floating Messenger button styling */
+.messenger-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #79b8f2;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: transform 0.3s;
+}
+
+.messenger-button:hover {
+    transform: scale(1.1);
+}
+
+    </style>
+</head>
+<body class="p-5">
+    <!-- Logo at the top -->
+    <div class="text-center mb-4">
+        <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="img-fluid" style="max-width: 150px;">
+    </div>
+
+    <!-- Form container with white background -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 col-sm-12">
+                <div class="form-container">
+                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 2</h1>
+                    <h4 class="text-center">(สำหรับผู้บริหารสถานศึกษา หรือ ผู้ที่ผู้บริหารสถานศึกษามอบหมายโดยไม่ใช่ครูพี่เลี้ยง)</h4>
+
+                    <!-- Search input for typing name -->
+                    <div class="mb-3 position-relative">
+                        <label for="search-name" class="form-label">พิมพ์ชื่อ-นามสกุลนิสิต ที่ต้องการประเมิน :</label>
+                        <input type="text" id="search-name" class="form-control" oninput="showSuggestions()">
+                        <div id="suggestions" class="list-group"></div>
+                    </div>
+
+                    <!-- Button to go to the evaluation link -->
+                    <button id="evaluationButton" class="btn btn-primary" disabled>ทำแบบประเมิน (Google Form)</button>
+                    <!-- Floating Messenger button -->
+<a href="https://m.me/ctpd.edu.msu" target="_blank" class="messenger-button">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1200px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger" class="img-fluid" style="width: 50px;">
+</a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
+    const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/Sheetresult?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
+    const suggestionsContainer = document.getElementById('suggestions');
+    const evaluationButton = document.getElementById('evaluationButton');
+    let data = [];
+    let evaluatedNames = [];
+
+    // Fetch data from the second Google Sheets API (evaluated names)
+    fetch(apiUrl2)
+        .then(response => response.json())
+        .then(data => {
+            const rows = data.values;
+            evaluatedNames = rows.slice(1).map(row => ({
+                firstName: row[0],  // First name in column 4 (E)
+                lastName: row[1],   // Last name in column 5 (F)
+                status: row[2],     // Status in column 1 (B)
+                time: row[3]        // Time in column 2 (C)
+            })).filter(evaluated => 
+                evaluated.status === 'ผู้บริหารสถานศึกษา หรือ ผู้ที่ผู้บริหารสถานศึกษามอบหมายโดยไม่ใช่ครูพี่เลี้ยง' && 
+                evaluated.time === 'ครั้งที่ ๒ : สัปดาห์ที่ 7 - 9 ของภาคเรียน'
+            ); // Filter based on status and time
+        })
+        .then(() => {
+            // After fetching evaluated names, fetch the main data
+            fetch(apiUrl1)
+                .then(response => response.json())
+                .then(dataResponse => {
+                    const rows = dataResponse.values;
+
+                    // Store the data for further filtering during search
+                    data = rows.slice(1).filter(row => {
+                        const firstName = row[1]; // Column B (first name)
+                        const lastName = row[2];  // Column C (last name)
+
+                        // Check if this name is already evaluated and matches the conditions
+                        const isEvaluated = evaluatedNames.some(evaluated => 
+                            evaluated.firstName === firstName && evaluated.lastName === lastName
+                        );
+
+                        // Only keep names that have not been evaluated
+                        return !isEvaluated;
+                    });
+                })
+                .catch(error => console.error('Error fetching main data:', error));
+        })
+        .catch(error => console.error('Error fetching evaluation data:', error));
+
+    // Show suggestions based on input
+    async function showSuggestions() {
+        const input = document.getElementById('search-name').value.toLowerCase().trim();
+        suggestionsContainer.innerHTML = '';
+
+        if (input === "") {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+
+        // Filter names based on input
+        const matches = data.filter(row => row[3].toLowerCase().includes(input)); // Column D (full name)
+
+        if (matches.length > 0) {
+            matches.forEach(match => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'list-group-item';
+                suggestionItem.textContent = match[3]; // Show name from column D
+                suggestionItem.onclick = () => {
+                    document.getElementById('search-name').value = match[3]; // Set the input value
+                    evaluationButton.disabled = false;
+                    evaluationButton.onclick = function() {
+                        const selectedLink = match[11]; // Column F (evaluation link)
+                        window.open(selectedLink, '_blank'); // Open link in a new tab
+                        evaluationButton.disabled = true; // Disable the button after click
+                        document.getElementById('search-name').value = ''; // Clear the input field
+                    };
+
+                    suggestionsContainer.style.display = 'none';
+                };
+                suggestionsContainer.appendChild(suggestionItem);
+            });
+            suggestionsContainer.style.display = 'block';
+        } else {
+            suggestionsContainer.style.display = 'none';
+        }
+    }
+
+    // Attach the showSuggestions function to window for global scope
+    window.showSuggestions = showSuggestions;
+});
+
+    </script>
+</body>
+</html>
+
