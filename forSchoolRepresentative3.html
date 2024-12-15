@@ -113,7 +113,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8 col-sm-12">
                 <div class="form-container">
-                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 2</h1>
+                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 3</h1>
                     <h4 class="text-center">(สำหรับผู้แทนสถานศึกษา)</h4>
 
                     <!-- Search input for typing name -->
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 time: row[3]        // Time in column 2 (C)
             })).filter(evaluated => 
                 evaluated.status === 'ผู้แทนสถานศึกษา' && 
-                evaluated.time === 'ครั้งที่ ๒ : สัปดาห์ที่ 7 - 9 ของภาคเรียน'
+                evaluated.time === 'ครั้งที่ ๓ : สัปดาห์ที่ 11 - 14 ของภาคเรียน'
             ); // Filter based on status and time
         })
         .then(() => {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('search-name').value = match[3]; // Set the input value
                     evaluationButton.disabled = false;
                     evaluationButton.onclick = function() {
-                        const selectedLink = match[12]; // (evaluation link)
+                        const selectedLink = match[16]; // (evaluation link)
                         window.open(selectedLink, '_blank'); // Open link in a new tab
                         evaluationButton.disabled = true; // Disable the button after click
                         document.getElementById('search-name').value = ''; // Clear the input field
