@@ -59,8 +59,8 @@
 
                 if (evalData.values) {
                     evaluatedNames = evalData.values.slice(1).map(row => ({
-                        firstName: row[1] || '',
-                        lastName: row[2] || ''
+                        firstName: row[0] || '',
+                        lastName: row[1] || ''
                     }));
                 }
 
