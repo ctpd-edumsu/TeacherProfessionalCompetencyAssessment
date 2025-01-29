@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อมูลเพิ่มเติมประกอบการกรอกคะแนนสมรรถนะ นิสิตฝึกสอน 2568</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+    <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-6 text-center">
+        <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="mx-auto w-24 h-24 mb-4">
+        <h2 class="text-lg font-bold text-gray-700 mb-4">ข้อมูลเพิ่มเติมประกอบการกรอกคะแนนสมรรถนะ นิสิตฝึกสอน 2568</h2>
+        <input type="text" id="search-name" placeholder="Enter name..." 
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div id="suggestions" class="mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-md hidden max-h-60 overflow-y-auto"></div>
+        <button id="evaluationButton" 
+            class="w-full mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg">
+            Evaluate
+        </button>
+        <div id="confirmationMessage" class="mt-4 text-center text-gray-600 hidden">
+            หากกรอกข้อมูลเสร็จแล้ว สามารถตรวจสอบสถานะได้
+            <a href="https://docs.google.com/spreadsheets/d/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/edit?usp=sharing" target="_blank" class="text-blue-500 underline">ที่นี่</a>
+        </div>
+    </div>
+    
+    <footer class="mt-4 text-center text-gray-600 text-sm">
+        เว็บไซต์นี้จัดทำโดย นายวีรภัทร ลอดทอง <br>นิสิตช่วยงาน ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+    </footer>
+
+    <script>
+        const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/data2?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+        const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/fillinpersonalinformation?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+        const suggestionsContainer = document.getElementById('suggestions');
+        const evaluationButton = document.getElementById('evaluationButton');
+        const searchInput = document.getElementById('search-name');
+        const confirmationMessage = document.getElementById('confirmationMessage');
+        let data = [];
+        let evaluatedNames = [];
+
+        function showLoadingProgress() {
+            let progress = 0;
+            Swal.fire({
+                title: 'กำลังโหลดข้อมูล... ',
+                html: '<b>โปรดรอ...</b>',
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading();
+                    const timer = setInterval(() => {
+                        progress += 5;
+                        if (progress >= 100) {
+                            clearInterval(timer);
+                            Swal.close();
+                        }
+                    }, 100);
+                }
+            });
+        }
+
+        async function fetchData() {
+            showLoadingProgress();
+            try {
+                const evalResponse = await fetch(apiUrl2);
+                const evalData = await evalResponse.json();
+                if (evalData.values) {
+                    evaluatedNames = evalData.values.slice(1).map(row => ({
+                        firstName: row[1] || '',
+                        lastName: row[2] || ''
+                    }));
+                }
+            } catch (error) {
+                console.error('Error fetching evaluation data:', error);
+            }
+
+            try {
+                const mainResponse = await fetch(apiUrl1);
+                const mainData = await mainResponse.json();
+                if (mainData.values) {
+                    data = mainData.values.slice(1).filter(row => {
+                        const firstName = row[1] || '';
+                        const lastName = row[2] || '';
+                        return !evaluatedNames.some(evaluated =>
+                            evaluated.firstName === firstName && evaluated.lastName === lastName
+                        );
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching main data:', error);
+            }
+        }
+
+        function showSuggestions() {
+            const input = searchInput.value.toLowerCase().trim();
+            suggestionsContainer.innerHTML = '';
+
+            if (input === "") {
+                suggestionsContainer.classList.add('hidden');
+                return;
+            }
+
+            const matches = data.filter(row => row[3] && row[3].toLowerCase().includes(input)).slice(0, 5);
+
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200';
+                    suggestionItem.textContent = match[3];
+                    suggestionItem.onclick = () => {
+                        searchInput.value = match[3];
+                        evaluationButton.onclick = function() {
+                            const selectedLink = match[5];
+                            if (selectedLink) {
+                                window.open(selectedLink, '_blank');
+                            }
+                            searchInput.classList.add('hidden');
+                            evaluationButton.classList.add('hidden');
+                            confirmationMessage.classList.remove('hidden');
+                        };
+                        suggestionsContainer.classList.add('hidden');
+                    };
+                    suggestionsContainer.appendChild(suggestionItem);
+                });
+                suggestionsContainer.classList.remove('hidden');
+            } else {
+                suggestionsContainer.classList.add('hidden');
+            }
+        }
+
+        searchInput.addEventListener('input', showSuggestions);
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>
