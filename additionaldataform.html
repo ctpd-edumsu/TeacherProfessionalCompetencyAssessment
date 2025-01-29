@@ -29,30 +29,23 @@
     </footer>
 
     <script>
-        const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/data2?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
-        const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/fillinpersonalinformation?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+        const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/values/namedata?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+        const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/fillinpersonalinformation?alt=json&key=AIzaSyBUCpe_Z2kLDT4nTDGGtPD1WuZ9iZQbTWo';
         const suggestionsContainer = document.getElementById('suggestions');
         const evaluationButton = document.getElementById('evaluationButton');
         const searchInput = document.getElementById('search-name');
         const confirmationMessage = document.getElementById('confirmationMessage');
         let data = [];
         let evaluatedNames = [];
+        let debounceTimer;
 
         function showLoadingProgress() {
-            let progress = 0;
             Swal.fire({
-                title: 'กำลังโหลดข้อมูล... ',
+                title: 'กำลังโหลดข้อมูล...',
                 html: '<b>โปรดรอ...</b>',
-                timerProgressBar: true,
+                allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
-                    const timer = setInterval(() => {
-                        progress += 5;
-                        if (progress >= 100) {
-                            clearInterval(timer);
-                            Swal.close();
-                        }
-                    }, 100);
                 }
             });
         }
@@ -60,21 +53,17 @@
         async function fetchData() {
             showLoadingProgress();
             try {
-                const evalResponse = await fetch(apiUrl2);
+                const [evalResponse, mainResponse] = await Promise.all([fetch(apiUrl2), fetch(apiUrl1)]);
                 const evalData = await evalResponse.json();
+                const mainData = await mainResponse.json();
+
                 if (evalData.values) {
                     evaluatedNames = evalData.values.slice(1).map(row => ({
                         firstName: row[1] || '',
                         lastName: row[2] || ''
                     }));
                 }
-            } catch (error) {
-                console.error('Error fetching evaluation data:', error);
-            }
 
-            try {
-                const mainResponse = await fetch(apiUrl1);
-                const mainData = await mainResponse.json();
                 if (mainData.values) {
                     data = mainData.values.slice(1).filter(row => {
                         const firstName = row[1] || '';
@@ -84,46 +73,52 @@
                         );
                     });
                 }
+
+                Swal.close();
             } catch (error) {
-                console.error('Error fetching main data:', error);
+                Swal.close();
+                console.error('Error fetching data:', error);
             }
         }
 
         function showSuggestions() {
-            const input = searchInput.value.toLowerCase().trim();
-            suggestionsContainer.innerHTML = '';
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const input = searchInput.value.toLowerCase().trim();
+                suggestionsContainer.innerHTML = '';
 
-            if (input === "") {
-                suggestionsContainer.classList.add('hidden');
-                return;
-            }
+                if (input === "") {
+                    suggestionsContainer.classList.add('hidden');
+                    return;
+                }
 
-            const matches = data.filter(row => row[3] && row[3].toLowerCase().includes(input)).slice(0, 5);
+                const matches = data.filter(row => row[3] && row[3].toLowerCase().includes(input));
 
-            if (matches.length > 0) {
-                matches.forEach(match => {
-                    const suggestionItem = document.createElement('div');
-                    suggestionItem.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200';
-                    suggestionItem.textContent = match[3];
-                    suggestionItem.onclick = () => {
-                        searchInput.value = match[3];
-                        evaluationButton.onclick = function() {
-                            const selectedLink = match[5];
-                            if (selectedLink) {
-                                window.open(selectedLink, '_blank');
-                            }
-                            searchInput.classList.add('hidden');
-                            evaluationButton.classList.add('hidden');
-                            confirmationMessage.classList.remove('hidden');
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200';
+                        suggestionItem.textContent = match[3];
+                        suggestionItem.onclick = () => {
+                            searchInput.value = match[3];
+                            evaluationButton.onclick = function() {
+                                const selectedLink = match[4];
+                                if (selectedLink) {
+                                    window.open(selectedLink, '_blank');
+                                }
+                                searchInput.classList.add('hidden');
+                                evaluationButton.classList.add('hidden');
+                                confirmationMessage.classList.remove('hidden');
+                            };
+                            suggestionsContainer.classList.add('hidden');
                         };
-                        suggestionsContainer.classList.add('hidden');
-                    };
-                    suggestionsContainer.appendChild(suggestionItem);
-                });
-                suggestionsContainer.classList.remove('hidden');
-            } else {
-                suggestionsContainer.classList.add('hidden');
-            }
+                        suggestionsContainer.appendChild(suggestionItem);
+                    });
+                    suggestionsContainer.classList.remove('hidden');
+                } else {
+                    suggestionsContainer.classList.add('hidden');
+                }
+            }, 300);
         }
 
         searchInput.addEventListener('input', showSuggestions);
