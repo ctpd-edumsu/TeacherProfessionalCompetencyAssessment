@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ค้นหารายชื่อ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+          footer {
+      margin-top: 20px;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+    }
+     </style>
+    <script>
+        let allNames = []; // เก็บข้อมูลรายชื่อทั้งหมด
+
+        async function fetchData() {
+            const url = "https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE";
+            const response = await fetch(url);
+            const data = await response.json();
+            allNames = data.values.slice(2).map(row => row[3]); // เก็บเฉพาะรายชื่อ
+        }
+
+        function searchName() {
+            const input = document.getElementById("nameSearch").value.toLowerCase();
+            const dropdownMenu = document.getElementById("nameDropdown");
+            const checkButton = document.getElementById("checkButton");
+            dropdownMenu.innerHTML = "";
+            checkButton.disabled = true; // ปิดปุ่มก่อน
+
+            if (input.length === 0) {
+                dropdownMenu.classList.remove("show");
+                return;
+            }
+
+            const matchedNames = allNames.filter(name => name.includes(input)).slice(0, 5);
+
+            if (matchedNames.length > 0) {
+                matchedNames.forEach(name => {
+                    const item = document.createElement("a");
+                    item.classList.add("dropdown-item");
+                    item.textContent = name;
+                    item.href = "#";
+                    item.onclick = function (e) {
+                        e.preventDefault();
+                        document.getElementById("nameSearch").value = name;
+                        dropdownMenu.classList.remove("show");
+                        checkButton.disabled = false; // เปิดปุ่มเมื่อเลือกชื่อ
+                    };
+                    dropdownMenu.appendChild(item);
+                });
+
+                dropdownMenu.classList.add("show");
+            } else {
+                dropdownMenu.classList.remove("show");
+            }
+        }
+
+        async function displayInfo() {
+            const selectedName = document.getElementById("nameSearch").value;
+            const table = document.getElementById("infoTable");
+            table.innerHTML = "";
+
+            const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE`);
+            const data = await response.json();
+            const rows = data.values.slice(2);
+
+            const row = rows.find(r => r[3] === selectedName);
+
+            if (!row) {
+                table.innerHTML = "<tr><td colspan='5' class='text-center'>ไม่พบข้อมูล</td></tr>";
+                return;
+            }
+
+            const rounds = [
+                { label: "ครั้งที่ 1", cols: [5, 6, 7, 8] },
+                { label: "ครั้งที่ 2", cols: [9, 10, 11, 12] },
+                { label: "ครั้งที่ 3", cols: [13, 14, 15, 16] }
+            ];
+
+            rounds.forEach(round => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${round.label}</td>` + round.cols.map(i => {
+                    let value = row[i] || '-';
+                    let className = "";
+
+                    if (value === "กรอกแล้ว") className = "bg-success-subtle";
+                    else if (value === "ยังไม่กรอก") className = "bg-danger-subtle";
+
+                    return `<td class="${className}">${value}</td>`;
+                }).join("");
+
+                table.appendChild(tr);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", fetchData);
+    </script>
+</head>
+<body class="container py-5">
+    <div class="card shadow-lg p-4">
+        <h2 class="text-center mb-4">ตรวจสอบการประเมินของนิสิตฝึกสอน 68</h2>
+        
+        <div class="mb-3 position-relative">
+            <input type="text" id="nameSearch" oninput="searchName()" class="form-control" placeholder="พิมพ์ชื่อที่ต้องการค้นหา" autocomplete="off">
+            <div class="dropdown-menu w-100" id="nameDropdown"></div>
+        </div>
+        
+        <div class="text-center">
+            <button id="checkButton" onclick="displayInfo()" class="btn btn-primary" disabled>ตรวจสอบ</button>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>ครั้งที่</th>
+                    <th>ครูพี่เลี้ยง</th>
+                    <th>อาจารย์นิเทศก์</th>
+                    <th>ผู้บริหารสถานศึกษา</th>
+                    <th>ผู้แทนสถานศึกษา</th>
+                </tr>
+            </thead>
+            <tbody id="infoTable">
+                <tr>
+                    <td colspan="5" class="text-center">กรุณาค้นหารายชื่อ</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+       <footer>
+    เว็บไซต์นี้จัดทำโดย 
+        <a href="https://m.me/UnknowBoyTH" target="_blank" class="text-blue-500 hover:underline">
+            NANGSYTECH
+        </a> 
+        <br>ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
