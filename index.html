@@ -64,8 +64,13 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        .btn-evaluation:hover {
+        .btn-evaluation:hover:not(:disabled) { /* Apply hover only when not disabled */
             background-color: #ffb74d;
+        }
+        .btn-evaluation:disabled { /* Style for disabled buttons */
+            background-color: #e0e0e0;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
         @media (max-width: 1200px) {
             .card {
@@ -78,12 +83,12 @@
             }
         }
         footer {
-      margin-top: 20px;
-      padding: 10px;
-      text-align: center;
-      font-size: 0.9em;
-      color: #666;
-    }
+            margin-top: 20px;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -145,5 +150,44 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.0.0-beta3/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1-1Kr3CgK_pBA9R5D4OLs3W77-S5QrudZ7fI4k4sJSh0/values/statusopen?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const status1 = data.values && data.values.length > 1 && data.values[1] && data.values[1].length > 1 ? data.values[1][1].toLowerCase() : 'close';
+                    const status2 = data.values && data.values.length > 2 && data.values[2] && data.values[2].length > 1 ? data.values[2][1].toLowerCase() : 'close';
+                    const status3 = data.values && data.values.length > 3 && data.values[3] && data.values[3].length > 1 ? data.values[3][1].toLowerCase() : 'close';
+
+                    const allButtons = document.querySelectorAll('.btn-evaluation');
+
+                    allButtons.forEach(button => {
+                        const onclickAttr = button.getAttribute('onclick');
+                        if (onclickAttr) {
+                            if (onclickAttr.includes('1.html')) { // Buttons for ครั้งที่ 1
+                                button.disabled = (status1 !== 'open');
+                            } else if (onclickAttr.includes('2.html')) { // Buttons for ครั้งที่ 2
+                                button.disabled = (status2 !== 'open');
+                            } else if (onclickAttr.includes('3.html')) { // Buttons for ครั้งที่ 3
+                                button.disabled = (status3 !== 'open');
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching or processing button statuses:', error);
+                    // Fallback: ensure all evaluation buttons remain disabled if there's an error
+                    document.querySelectorAll('.btn-evaluation').forEach(button => button.disabled = true);
+                });
+        });
+    </script>
 </body>
 </html>
