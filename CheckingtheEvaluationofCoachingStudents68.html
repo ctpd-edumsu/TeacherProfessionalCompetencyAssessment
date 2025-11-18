@@ -6,22 +6,97 @@
     <title>ตรวจสอบการประเมินของนิสิตฝึกสอน 68</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-    footer {
-      margin-top: 20px;
-      padding: 10px;
-      text-align: center;
-      font-size: 0.9em;
-      color: #666;
-    }
-     </style>
+        footer {
+            margin-top: 20px;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+        /* CSS สำหรับหน้า Loading */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
     <script>
         let allNames = []; // เก็บข้อมูลรายชื่อทั้งหมด
 
         async function fetchData() {
             const url = "https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE";
-            const response = await fetch(url);
-            const data = await response.json();
-            allNames = data.values.slice(2).map(row => row[3]); // เก็บเฉพาะรายชื่อ
+            const progressBar = document.getElementById("progressBar");
+            const progressText = document.getElementById("progressText");
+            const loadingOverlay = document.getElementById("loadingOverlay");
+            const nameInput = document.getElementById("nameSearch");
+
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                // คำนวณขนาดไฟล์เพื่อทำ Progress Bar
+                const contentLength = response.headers.get('content-length');
+                const total = contentLength ? parseInt(contentLength, 10) : 0;
+                let loaded = 0;
+
+                const reader = response.body.getReader();
+                const chunks = [];
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    chunks.push(value);
+                    loaded += value.length;
+
+                    // อัปเดต Progress Bar
+                    if (total > 0) {
+                        const percent = Math.round((loaded / total) * 100);
+                        progressBar.style.width = percent + "%";
+                        progressBar.textContent = percent + "%";
+                        progressText.innerText = `กำลังโหลดข้อมูล... ${percent}%`;
+                    } else {
+                        // กรณี Server ไม่ส่งขนาดไฟล์มา (Google Sheets API มักจะเป็นแบบนี้)
+                        // ให้แสดงแบบ Indeterminate (วิ่งไปเรื่อยๆ)
+                        progressBar.style.width = "100%";
+                        progressBar.classList.add("progress-bar-striped", "progress-bar-animated");
+                        progressBar.textContent = "กำลังประมวลผล...";
+                        progressText.innerText = `ดาวน์โหลดแล้ว ${(loaded / 1024).toFixed(2)} KB`;
+                    }
+                }
+
+                // รวมข้อมูลกลับเป็น Text แล้วแปลงเป็น JSON
+                const blob = new Blob(chunks);
+                const text = await blob.text();
+                const data = JSON.parse(text);
+
+                allNames = data.values.slice(2).map(row => row[3]); // เก็บเฉพาะรายชื่อ
+
+                // ซ่อน Loading และเปิดให้พิมพ์
+                loadingOverlay.classList.add("hidden");
+                nameInput.disabled = false; // เปิดช่องค้นหา
+                nameInput.placeholder = "พิมพ์ชื่อที่ต้องการค้นหา";
+                nameInput.focus();
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                progressText.innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณารีเฟรชหน้าจอ";
+                progressBar.classList.add("bg-danger");
+            }
         }
 
         function searchName() {
@@ -29,14 +104,15 @@
             const dropdownMenu = document.getElementById("nameDropdown");
             const checkButton = document.getElementById("checkButton");
             dropdownMenu.innerHTML = "";
-            checkButton.disabled = true; // ปิดปุ่มก่อน
+            checkButton.disabled = true; 
 
             if (input.length === 0) {
                 dropdownMenu.classList.remove("show");
                 return;
             }
 
-            const matchedNames = allNames.filter(name => name.includes(input)).slice(0, 5);
+            // กรองรายชื่อ (ต้องโหลดเสร็จแล้วถึงจะทำงานได้ถูกต้อง)
+            const matchedNames = allNames.filter(name => name && name.includes(input)).slice(0, 5);
 
             if (matchedNames.length > 0) {
                 matchedNames.forEach(name => {
@@ -48,7 +124,7 @@
                         e.preventDefault();
                         document.getElementById("nameSearch").value = name;
                         dropdownMenu.classList.remove("show");
-                        checkButton.disabled = false; // เปิดปุ่มเมื่อเลือกชื่อ
+                        checkButton.disabled = false;
                     };
                     dropdownMenu.appendChild(item);
                 });
@@ -60,52 +136,79 @@
         }
 
         async function displayInfo() {
+            // เพิ่ม Loading เล็กๆ ที่ปุ่มตรวจสอบ
+            const checkButton = document.getElementById("checkButton");
+            const originalText = checkButton.innerText;
+            checkButton.disabled = true;
+            checkButton.innerText = "กำลังค้นหา...";
+
             const selectedName = document.getElementById("nameSearch").value;
             const table = document.getElementById("infoTable");
             table.innerHTML = "";
 
-            const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE`);
-            const data = await response.json();
-            const rows = data.values.slice(2);
+            try {
+                // โหลดข้อมูลอีกครั้งเพื่อดึงรายละเอียด (ตามโค้ดเดิม)
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/1kVHJvQw6XDBFV_sLSLNBnfy3hwVR2N1K3Hjz-epoUts/values/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE`);
+                const data = await response.json();
+                const rows = data.values.slice(2);
 
-            const row = rows.find(r => r[3] === selectedName);
+                const row = rows.find(r => r[3] === selectedName);
 
-            if (!row) {
-                table.innerHTML = "<tr><td colspan='5' class='text-center'>ไม่พบข้อมูล</td></tr>";
-                return;
+                if (!row) {
+                    table.innerHTML = "<tr><td colspan='5' class='text-center text-danger'>ไม่พบข้อมูล หรือ ชื่อไม่ถูกต้อง</td></tr>";
+                } else {
+                    const rounds = [
+                        { label: "ครั้งที่ 1", cols: [5, 6, 7, 8] },
+                        { label: "ครั้งที่ 2", cols: [9, 10, 11, 12] },
+                        { label: "ครั้งที่ 3", cols: [13, 14, 15, 16] }
+                    ];
+
+                    rounds.forEach(round => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `<td>${round.label}</td>` + round.cols.map(i => {
+                            let value = row[i] || '-';
+                            let className = "";
+
+                            if (value === "กรอกแล้ว") className = "bg-success-subtle";
+                            else if (value === "ยังไม่กรอก") className = "bg-danger-subtle";
+
+                            return `<td class="${className}">${value}</td>`;
+                        }).join("");
+
+                        table.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                table.innerHTML = "<tr><td colspan='5' class='text-center text-danger'>เกิดข้อผิดพลาดในการเชื่อมต่อ</td></tr>";
+            } finally {
+                checkButton.innerText = originalText;
+                checkButton.disabled = false;
             }
-
-            const rounds = [
-                { label: "ครั้งที่ 1", cols: [5, 6, 7, 8] },
-                { label: "ครั้งที่ 2", cols: [9, 10, 11, 12] },
-                { label: "ครั้งที่ 3", cols: [13, 14, 15, 16] }
-            ];
-
-            rounds.forEach(round => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${round.label}</td>` + round.cols.map(i => {
-                    let value = row[i] || '-';
-                    let className = "";
-
-                    if (value === "กรอกแล้ว") className = "bg-success-subtle";
-                    else if (value === "ยังไม่กรอก") className = "bg-danger-subtle";
-
-                    return `<td class="${className}">${value}</td>`;
-                }).join("");
-
-                table.appendChild(tr);
-            });
         }
 
         document.addEventListener("DOMContentLoaded", fetchData);
     </script>
 </head>
 <body class="container py-5">
+
+    <!-- ส่วน Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="text-center" style="width: 80%; max-width: 400px;">
+            <h4 class="mb-3 text-primary fw-bold">กำลังโหลดฐานข้อมูล...</h4>
+            <div class="progress shadow-sm" style="height: 25px;">
+                <div id="progressBar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;">0%</div>
+            </div>
+            <p id="progressText" class="mt-2 text-muted small">กรุณารอสักครู่...</p>
+        </div>
+    </div>
+
     <div class="card shadow-lg p-4">
         <h2 class="text-center mb-4">ตรวจสอบการประเมินของนิสิตฝึกสอน 68</h2>
         
         <div class="mb-3 position-relative">
-            <input type="text" id="nameSearch" oninput="searchName()" class="form-control" placeholder="พิมพ์ชื่อที่ต้องการค้นหา" autocomplete="off">
+            <!-- เพิ่ม disabled ไว้ก่อน จนกว่า JS จะโหลดเสร็จ -->
+            <input type="text" id="nameSearch" oninput="searchName()" class="form-control" placeholder="กำลังโหลดรายชื่อ..." autocomplete="off" disabled>
             <div class="dropdown-menu w-100" id="nameDropdown"></div>
         </div>
         
@@ -132,7 +235,7 @@
             </tbody>
         </table>
     </div>
-       <footer>
+    <footer>
     เว็บไซต์นี้จัดทำโดย 
         <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-blue-500 hover:underline">
             NANGSYTECH (หนังสือ 3MEd)
