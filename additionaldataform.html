@@ -1,36 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ข้อมูลเพิ่มเติมประกอบการกรอกคะแนนสมรรถนะ นิสิตฝึกสอน 2568</title>
+    <title>ระบบกรอกคะแนนสมรรถนะ นิสิตฝึกสอน 2568</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Custom Config for Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        msu: {
+                            primary: '#F0C419', // MSU Yellow theme idea
+                            secondary: '#607D8B',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        /* Custom Scrollbar for suggestions */
+        #suggestions::-webkit-scrollbar {
+            width: 8px;
+        }
+        #suggestions::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        #suggestions::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        #suggestions::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-    <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-6 text-center">
-        <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="mx-auto w-24 h-24 mb-4">
-        <h2 class="text-lg font-bold text-gray-700 mb-4">ข้อมูลเพิ่มเติมประกอบการกรอกคะแนนสมรรถนะ นิสิตฝึกสอน 2568</h2>
-        <p class="text-red-500 font-semibold mb-4">กรอกภายในวันที่ 10 กุมภาพันธ์ 2569</p>
-        <input type="text" id="search-name" placeholder="กรอกชือ-นามสกุล" 
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <div id="suggestions" class="mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-md hidden max-h-60 overflow-y-auto"></div>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+
+    <!-- Main Card -->
+    <div class="w-full max-w-lg bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl p-8 border border-white/20 relative overflow-hidden">
+        
+        <!-- Decoration Header Line -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
+        <!-- Logo Area -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-2 rounded-full bg-white shadow-md mb-4">
+                <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="w-20 h-20 object-contain">
+            </div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 leading-tight">
+                ข้อมูลเพิ่มเติมประกอบการ<br>กรอกคะแนนสมรรถนะ
+            </h2>
+            <p class="text-gray-500 text-sm mt-1">นิสิตฝึกสอน ประจำปีการศึกษา 2568</p>
+        </div>
+
+        <!-- Warning Badge -->
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r mb-6">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="text-red-600 font-medium text-sm">
+                    กรุณากรอกข้อมูลภายในวันที่ <span class="font-bold underline">10 กุมภาพันธ์ 2569</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="relative w-full">
+            <label for="search-name" class="block text-sm font-medium text-gray-700 mb-2 pl-1">ค้นหารายชื่อนิสิต</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" id="search-name" placeholder="พิมพ์ชื่อ-นามสกุล..." 
+                    class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 shadow-sm placeholder-gray-400">
+            </div>
+            
+            <!-- Suggestions List -->
+            <div id="suggestions" class="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto divide-y divide-gray-100"></div>
+        </div>
+
+        <!-- Action Button -->
         <button id="evaluationButton" 
-            class="w-full mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg">
-            เข้าสู่แบบฟอร์มกรอกข้อมูล
+            class="group w-full mt-6 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
+            <span>เข้าสู่แบบฟอร์มกรอกข้อมูล</span>
+            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </button>
-        <div id="confirmationMessage" class="mt-4 text-center text-gray-600 hidden">
-            หากกรอกข้อมูลเสร็จแล้ว สามารถตรวจสอบสถานะได้
-            <a href="https://docs.google.com/spreadsheets/d/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/edit?usp=sharing" target="_blank" class="text-blue-500 underline">ที่นี่</a>
+
+        <!-- Success/Confirmation Message -->
+        <div id="confirmationMessage" class="mt-6 p-6 bg-green-50 rounded-xl border border-green-200 text-center hidden animate-fade-in-up">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 class="text-lg font-medium text-green-800">กำลังดำเนินการ</h3>
+            <p class="text-sm text-green-700 mt-2">
+                หากท่านกรอกข้อมูลเสร็จเรียบร้อยแล้ว <br>สามารถตรวจสอบสถานะได้
+                <a href="https://docs.google.com/spreadsheets/d/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/edit?usp=sharing" target="_blank" class="font-bold underline hover:text-green-900 transition">ที่นี่</a>
+            </p>
         </div>
     </div>
     
-    <footer class="mt-4 text-center text-gray-600 text-sm">
-        เว็บไซต์นี้จัดทำโดย 
-        <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-blue-500 hover:underline">
-            NANGSYTECH
-        </a> 
-        <br>ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+    <!-- Footer -->
+    <footer class="mt-8 text-center space-y-2">
+        <p class="text-gray-500 text-xs">
+            เว็บไซต์นี้จัดทำโดย 
+            <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-indigo-500 font-semibold hover:text-indigo-700 transition">
+                NANGSYTECH
+            </a> 
+        </p>
+        <p class="text-gray-400 text-[10px] max-w-xs mx-auto leading-relaxed">
+            ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู <br>คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+        </p>
     </footer>
     
 
@@ -45,13 +144,26 @@
         let evaluatedNames = [];
         let debounceTimer;
 
+        // Custom SweetAlert Styling
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+
         function showLoadingProgress() {
             Swal.fire({
-                title: 'กำลังโหลดข้อมูล...',
-                html: '<b>โปรดรอ...</b>',
+                title: 'กำลังโหลดข้อมูล',
+                html: '<span class="text-sm text-gray-500">กรุณารอสักครู่...</span>',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
+                },
+                customClass: {
+                    popup: 'rounded-2xl',
+                    title: 'font-sans text-xl text-gray-700',
                 }
             });
         }
@@ -71,6 +183,7 @@
                 }
 
                 if (mainData.values) {
+                    // Filter Logic: Show only those NOT in the evaluated list
                     data = mainData.values.slice(1).filter(row => {
                         const firstName = row[1] || '';
                         const lastName = row[2] || '';
@@ -81,8 +194,17 @@
                 }
 
                 Swal.close();
+                // Optional: Show success toast
+                // Toast.fire({ icon: 'success', title: 'โหลดข้อมูลสำเร็จ' });
+                
             } catch (error) {
                 Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่ภายหลัง',
+                    customClass: { popup: 'rounded-2xl' }
+                });
                 console.error('Error fetching data:', error);
             }
         }
@@ -103,29 +225,49 @@
                 if (matches.length > 0) {
                     matches.forEach(match => {
                         const suggestionItem = document.createElement('div');
-                        suggestionItem.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200';
-                        suggestionItem.textContent = match[3];
+                        // Improved suggestion item styling
+                        suggestionItem.className = 'px-4 py-3 cursor-pointer hover:bg-indigo-50 text-gray-700 text-sm transition-colors border-b border-gray-50 last:border-none flex items-center justify-between';
+                        
+                        // Add an icon or symbol
+                        suggestionItem.innerHTML = `<span>${match[3]}</span> <span class="text-xs text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full">เลือก</span>`;
+                        
                         suggestionItem.onclick = () => {
                             searchInput.value = match[3];
+                            
+                            // Setup Button Action
                             evaluationButton.onclick = function() {
                                 const selectedLink = match[4];
                                 if (selectedLink) {
                                     window.open(selectedLink, '_blank');
                                 }
-                                searchInput.classList.add('hidden');
+                                // UI Transition
+                                searchInput.parentElement.classList.add('hidden'); // Hide search container
                                 evaluationButton.classList.add('hidden');
                                 confirmationMessage.classList.remove('hidden');
                             };
+                            
                             suggestionsContainer.classList.add('hidden');
                         };
                         suggestionsContainer.appendChild(suggestionItem);
                     });
                     suggestionsContainer.classList.remove('hidden');
                 } else {
-                    suggestionsContainer.classList.add('hidden');
+                    // Show "No results" state
+                    const noResult = document.createElement('div');
+                    noResult.className = 'px-4 py-3 text-gray-400 text-sm text-center italic';
+                    noResult.textContent = 'ไม่พบรายชื่อนิสิต (หรืออาจประเมินไปแล้ว)';
+                    suggestionsContainer.appendChild(noResult);
+                    suggestionsContainer.classList.remove('hidden');
                 }
             }, 300);
         }
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.classList.add('hidden');
+            }
+        });
 
         searchInput.addEventListener('input', showSuggestions);
         document.addEventListener('DOMContentLoaded', fetchData);
