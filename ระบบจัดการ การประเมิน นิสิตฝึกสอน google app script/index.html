@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูลการประเมิน CTPD MSU - นิสิตฝึกสอน ปีการศึกษา 2569</title>
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* Custom Scrollbar */
+        .table-container::-webkit-scrollbar,
+        #mobileCardContainer::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-track,
+        #mobileCardContainer::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb,
+        #mobileCardContainer::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover,
+        #mobileCardContainer::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        th,
+        td {
+            white-space: nowrap;
+        }
+
+        /* Toggle status classes matching contract */
+        .toggle-btn-open {
+            background-color: #16a34a !important;
+            /* emerald-600 */
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+        }
+
+        .toggle-btn-close {
+            background-color: #dc2626 !important;
+            /* red-600 */
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen text-slate-800 antialiased flex flex-col">
+
+    <!-- ========================================== -->
+    <!-- 1. LOGIN SCREEN -->
+    <!-- ========================================== -->
+    <div id="loginForm"
+        class="container mx-auto max-w-md px-4 flex flex-col items-center justify-center min-h-screen py-12">
+        <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100 w-full relative overflow-hidden">
+            <!-- Top Orange Gradient Accent -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600">
+            </div>
+
+            <!-- Logo & Title -->
+            <div class="text-center mt-2 mb-8">
+                <div class="inline-flex p-3.5 rounded-2xl bg-orange-50 border border-orange-100 shadow-sm mb-4">
+                    <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo CTPD"
+                        class="w-16 h-16 object-contain">
+                </div>
+                <div
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 mb-2">
+                    ปีการศึกษา <span data-ctpd="academic-year">2569</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                    ระบบจัดการข้อมูลการประเมิน
+                </h1>
+                <p class="text-orange-600 font-medium text-sm mt-0.5">สมรรถนะทางวิชาชีพครู CTPD MSU</p>
+                <p class="text-slate-400 text-xs mt-1">คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม</p>
+            </div>
+
+            <!-- Inputs Form -->
+            <div class="space-y-4">
+                <div>
+                    <label for="username"
+                        class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                        <i class="fa-solid fa-user text-orange-500 mr-1"></i>ชื่อผู้ใช้งาน (Username)
+                    </label>
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-user-shield text-sm"></i>
+                        </div>
+                        <input id="username" type="text" placeholder="กรอกชื่อผู้ใช้งาน..." autocomplete="username"
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password"
+                        class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
+                        <i class="fa-solid fa-lock text-orange-500 mr-1"></i>รหัสผ่าน (Password)
+                    </label>
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-key text-sm"></i>
+                        </div>
+                        <input id="password" type="password" placeholder="กรอกรหัสผ่าน..."
+                            autocomplete="current-password"
+                            class="w-full pl-10 pr-11 py-3 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-sm">
+                        <button type="button" onclick="togglePasswordVisibility()"
+                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                            <i id="passwordToggleIcon" class="fa-regular fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="handleLogin()"
+                    class="w-full mt-2 px-6 py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-300">
+                    <i class="fa-solid fa-right-to-bracket text-sm"></i>
+                    <span>เข้าสู่ระบบ</span>
+                </button>
+            </div>
+
+            <!-- Footer in Login -->
+            <div class="mt-8 pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
+                <p>พัฒนาโดย <strong class="text-slate-600">NANGSYTECH</strong> &copy; 2025</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN DASHBOARD CONTENT -->
+    <!-- ========================================== -->
+    <div id="mainContent" class="flex-grow flex flex-col hidden">
+
+        <!-- Top Navigation Bar -->
+        <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-500">
+                        <i class="fa-solid fa-graduation-cap text-base"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                            ระบบจัดการข้อมูลการประเมิน CTPD MSU
+                        </h2>
+                        <p class="text-xs text-orange-600 font-medium">นิสิตฝึกสอน ปีการศึกษา <span data-ctpd="academic-year">2569</span></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <!-- User Department Pill -->
+                    <div
+                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                        <i class="fa-solid fa-building-columns text-orange-500 text-[10px]"></i>
+                        <span id="userDepartmentBadge">สาขาวิชา: -</span>
+                    </div>
+
+                    <!-- Help Guide Button -->
+                    <button type="button" onclick="openHelpModal()"
+                        class="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-orange-600 py-1.5 px-2.5 rounded-lg border border-slate-200 hover:border-orange-300 transition-all bg-white">
+                        <i class="fa-regular fa-circle-question"></i>
+                        <span class="hidden md:inline">คำแนะนำ</span>
+                    </button>
+
+                    <!-- Logout Button -->
+                    <button onclick="logout()"
+                        class="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 py-1.5 px-3 rounded-lg border border-rose-200 hover:border-rose-600 transition-all">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span class="hidden sm:inline">ออกจากระบบ</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Container -->
+        <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex-grow space-y-6">
+
+            <!-- ========================================== -->
+            <!-- 2.1 ADMIN CONTROLS HUB (Only for 'all') -->
+            <!-- ========================================== -->
+            <div id="adminControls"
+                class="bg-gradient-to-br from-amber-50 to-orange-50/60 p-5 sm:p-6 rounded-3xl shadow-sm border border-amber-200/80 mb-6 hidden">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-amber-200/60">
+                    <div class="flex items-center gap-2.5">
+                        <div
+                            class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs">
+                            <i class="fa-solid fa-sliders text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">
+                                ตั้งค่าการเปิด / ปิดรับการประเมิน (Admin Control)
+                            </h3>
+                            <p class="text-xs text-amber-800">ควบคุมการรับคำตอบใน Google Form ตามรอบเวลาภาคเรียน</p>
+                        </div>
+                    </div>
+                    <span
+                        class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-200 text-amber-900 w-fit">
+                        <i class="fa-solid fa-shield-halved text-[10px]"></i> สิทธิ์ผู้ดูแลระบบสูงสุด
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Period 1 -->
+                    <div
+                        class="bg-white p-4 rounded-2xl border border-amber-100 shadow-2xs flex flex-col justify-between">
+                        <div class="mb-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-orange-600 uppercase tracking-wide">รอบที่ 1</span>
+                                <span class="text-[11px] text-slate-400">สัปดาห์ที่ 3 - 5</span>
+                            </div>
+                            <h4 class="text-sm font-semibold text-slate-800">ครั้งที่ ๑ ของภาคเรียน</h4>
+                        </div>
+                        <button id="togglePeriod1" data-period="1" onclick="toggleEvaluationPeriod(this)"
+                            class="px-4 py-2.5 rounded-xl text-white text-sm font-medium w-full transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                            <span>กำลังโหลด...</span>
+                        </button>
+                    </div>
+
+                    <!-- Period 2 -->
+                    <div
+                        class="bg-white p-4 rounded-2xl border border-amber-100 shadow-2xs flex flex-col justify-between">
+                        <div class="mb-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-orange-600 uppercase tracking-wide">รอบที่ 2</span>
+                                <span class="text-[11px] text-slate-400">สัปดาห์ที่ 7 - 9</span>
+                            </div>
+                            <h4 class="text-sm font-semibold text-slate-800">ครั้งที่ ๒ ของภาคเรียน</h4>
+                        </div>
+                        <button id="togglePeriod2" data-period="2" onclick="toggleEvaluationPeriod(this)"
+                            class="px-4 py-2.5 rounded-xl text-white text-sm font-medium w-full transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                            <span>กำลังโหลด...</span>
+                        </button>
+                    </div>
+
+                    <!-- Period 3 -->
+                    <div
+                        class="bg-white p-4 rounded-2xl border border-amber-100 shadow-2xs flex flex-col justify-between">
+                        <div class="mb-3">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-orange-600 uppercase tracking-wide">รอบที่ 3</span>
+                                <span class="text-[11px] text-slate-400">สัปดาห์ที่ 11 - 14</span>
+                            </div>
+                            <h4 class="text-sm font-semibold text-slate-800">ครั้งที่ ๓ ของภาคเรียน</h4>
+                        </div>
+                        <button id="togglePeriod3" data-period="3" onclick="toggleEvaluationPeriod(this)"
+                            class="px-4 py-2.5 rounded-xl text-white text-sm font-medium w-full transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+                            <span>กำลังโหลด...</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System General Settings (Academic Year & Deadline) -->
+                <div class="mt-5 pt-4 border-t border-amber-200/60">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-gear text-orange-500"></i>
+                        <h4 class="text-sm sm:text-base font-bold text-slate-800">
+                            ตั้งค่าข้อมูลทั่วไปของระบบ (ปีการศึกษา / กำหนดส่งข้อมูลเพิ่มเติม)
+                        </h4>
+                        <span class="text-[11px] text-slate-500 ml-auto hidden sm:inline">บันทึกลงชีท settingctpd</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-amber-100 shadow-2xs">
+                        <!-- Academic Year Setting -->
+                        <div>
+                            <label for="settingAcademicYear" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-calendar-days text-orange-500 mr-1"></i>ปีการศึกษาของระบบ (Academic Year)
+                            </label>
+                            <input id="settingAcademicYear" type="text" placeholder="เช่น 2569"
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            <p class="text-[11px] text-slate-400 mt-1">จะถูกนำไปแสดงเป็นปีการศึกษาบนหัวเว็บและทุกหน้าประเมิน</p>
+                        </div>
+
+                        <!-- Deadline Setting -->
+                        <div>
+                            <label for="settingDeadlineDate" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <i class="fa-solid fa-clock text-orange-500 mr-1"></i>กำหนดส่งข้อมูลเพิ่มเติม (Deadline Date)
+                            </label>
+                            <div class="flex gap-2">
+                                <input id="settingDeadlineDate" type="text" placeholder="เช่น 30/10/2026 หรือ 30 ตุลาคม 2569"
+                                    class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            </div>
+                            <p id="deadlinePreviewText" class="text-[11px] text-amber-700 mt-1 font-medium">
+                                ตัวอย่างข้อความ: กรุณากรอกข้อมูลภายในวันที่ <span id="previewDeadlineVal" class="underline font-bold">30 ตุลาคม 2569</span>
+                            </p>
+                        </div>
+
+                        <!-- Action Row -->
+                        <div class="md:col-span-2 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                            <p class="text-xs text-slate-400">
+                                เมื่อกดบันทึก ข้อมูลจะถูกอัปเดตลงในชีท และหน้าเว็บทั้งหมดจะแสดงผลตามค่าใหม่ทันที
+                            </p>
+                            <button type="button" onclick="saveCtpdSettings()"
+                                class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-medium text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>บันทึกการตั้งค่าระบบ</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 2.2 OVERVIEW STATS CARDS -->
+            <!-- ========================================== -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Total Records -->
+                <div
+                    class="bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-100 flex items-center gap-3.5">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg border border-orange-100">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-400">ข้อมูลทั้งหมด</p>
+                        <h4 id="statTotalCount" class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">0</h4>
+                        <p class="text-[10px] text-slate-400">รายการประเมิน</p>
+                    </div>
+                </div>
+
+                <!-- Filtered Records -->
+                <div
+                    class="bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-100 flex items-center gap-3.5">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg border border-blue-100">
+                        <i class="fa-solid fa-filter"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-400">รายการที่แสดง</p>
+                        <h4 id="statFilteredCount" class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">0
+                        </h4>
+                        <p class="text-[10px] text-slate-400">ตรงตามเงื่อนไข</p>
+                    </div>
+                </div>
+
+                <!-- Active Department -->
+                <div
+                    class="bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-100 flex items-center gap-3.5">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg border border-purple-100">
+                        <i class="fa-solid fa-id-card-clip"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-400">สิทธิ์การเข้าถึง</p>
+                        <h4 id="statDepartment"
+                            class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate max-w-[130px]">-
+                        </h4>
+                        <p class="text-[10px] text-purple-600 font-medium">สาขาวิชา</p>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div
+                    class="bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-slate-100 flex items-center gap-3.5">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg border border-emerald-100">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-400">สถานะระบบ</p>
+                        <h4 class="text-sm sm:text-base font-bold text-emerald-600 leading-tight">เชื่อมต่อแล้ว</h4>
+                        <p class="text-[10px] text-slate-400">พร้อมประมวลผล</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 2.3 SEARCH & FILTER CONTROLS -->
+            <!-- ========================================== -->
+            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 relative">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                    <h3 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-orange-500"></i>
+                        <span>ค้นหาและกรองข้อมูลการประเมิน</span>
+                    </h3>
+                    <button type="button" onclick="resetFilters()"
+                        class="text-xs text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>ล้างตัวกรอง</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <!-- Name Search -->
+                    <div>
+                        <label for="nameSearch"
+                            class="block text-xs font-medium text-slate-600 mb-1">ค้นหาชื่อนิสิต</label>
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-user text-xs"></i>
+                            </div>
+                            <input id="nameSearch" type="text" placeholder="พิมพ์ชื่อนิสิต..."
+                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                        </div>
+                    </div>
+
+                    <!-- Surname Search -->
+                    <div>
+                        <label for="surnameSearch"
+                            class="block text-xs font-medium text-slate-600 mb-1">ค้นหานามสกุล</label>
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-signature text-xs"></i>
+                            </div>
+                            <input id="surnameSearch" type="text" placeholder="พิมพ์นามสกุล..."
+                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                        </div>
+                    </div>
+
+                    <!-- Evaluator Filter -->
+                    <div>
+                        <label for="evaluatorFilter"
+                            class="block text-xs font-medium text-slate-600 mb-1">กลุ่มผู้ประเมิน</label>
+                        <select id="evaluatorFilter"
+                            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm">
+                            <option value="">ทุกผู้ประเมิน</option>
+                            <option value="ครูพี่เลี้ยง">ครูพี่เลี้ยง</option>
+                            <option value="อาจารย์นิเทศก์">อาจารย์นิเทศก์</option>
+                            <option
+                                value="ผู้บริหารสถานศึกษา หรือ ผู้ที่ผู้บริหารสถานศึกษามอบหมายโดยไม่ใช่ครูพี่เลี้ยง">
+                                ผู้บริหารสถานศึกษา</option>
+                            <option value="ผู้แทนสถานศึกษา">ผู้แทนสถานศึกษา</option>
+                            <option value="ไม่เอา">ไม่เอา (ยกเลิก)</option>
+                        </select>
+                    </div>
+
+                    <!-- Eval Time Filter -->
+                    <div>
+                        <label for="evalTimeFilter"
+                            class="block text-xs font-medium text-slate-600 mb-1">รอบครั้งการประเมิน</label>
+                        <select id="evalTimeFilter"
+                            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm">
+                            <option value="">ทุกครั้งการประเมิน</option>
+                            <option value="ครั้งที่ ๑ : สัปดาห์ที่ 3 - 5 ของภาคเรียน">ครั้งที่ ๑ (สัปดาห์ 3-5)</option>
+                            <option value="ครั้งที่ ๒ : สัปดาห์ที่ 7 - 9 ของภาคเรียน">ครั้งที่ ๒ (สัปดาห์ 7-9)</option>
+                            <option value="ครั้งที่ ๓ : สัปดาห์ที่ 11 - 14 ของภาคเรียน">ครั้งที่ ๓ (สัปดาห์ 11-14)
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Admin Action Row (Delete Invalid) -->
+                <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-xs text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                        <span>พิมพ์ในช่องค้นหาหรือเปลี่ยนตัวกรอง ข้อมูลจะอัปเดตอัตโนมัติแบบเรียลไทม์</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="deleteInvalidRows()" id="deleteInvalidButton"
+                            class="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white text-xs font-medium px-4 py-2 rounded-xl shadow-xs transition-all"
+                            hidden>
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>ลบการประเมินที่ไม่เอาทั้งหมด</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 2.4 DATA PRESENTATION (DUAL-VIEW) -->
+            <!-- ========================================== -->
+
+            <!-- (A) DESKTOP TABLE VIEW (Visible on >= 768px) -->
+            <div class="hidden md:block bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-4 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between">
+                    <span
+                        class="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-list text-orange-500"></i>
+                        <span>ตารางรายการผลการประเมิน</span>
+                    </span>
+                    <button type="button" onclick="loadData()"
+                        class="text-xs text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>รีเฟรชข้อมูล</span>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table id="dataTable" class="w-full text-sm text-left">
+                        <thead
+                            class="bg-slate-100/90 backdrop-blur-xs text-slate-700 text-xs font-semibold sticky top-0 z-10 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">เวลาบันทึก</th>
+                                <th class="p-3">ผู้ประเมิน</th>
+                                <th class="p-3">ครั้งที่</th>
+                                <th class="p-3">คำนำหน้า</th>
+                                <th class="p-3">ชื่อ</th>
+                                <th class="p-3">นามสกุล</th>
+                                <th class="p-3">สาขาวิชา</th>
+                                <th class="p-3 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100">
+                            <!-- Rows injected via renderTable() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- (B) MOBILE CARDS VIEW (Visible on < 768px) -->
+            <div class="block md:hidden space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <span
+                        class="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-address-card text-orange-500"></i>
+                        <span>รายการประเมิน (สำหรับมือถือ)</span>
+                    </span>
+                    <button type="button" onclick="loadData()"
+                        class="text-xs text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>รีเฟรช</span>
+                    </button>
+                </div>
+
+                <!-- Container where mobile cards are rendered -->
+                <div id="mobileCardContainer" class="space-y-3">
+                    <!-- Cards injected via renderTable() -->
+                </div>
+            </div>
+
+            <!-- Empty State Display -->
+            <div id="emptyState" class="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-xs hidden">
+                <div
+                    class="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-3 text-2xl">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h4 class="text-base font-bold text-slate-700">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</h4>
+                <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาชื่อ หรือปรับตัวกรองผู้ประเมิน</p>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-auto py-6 text-center text-xs text-slate-400 border-t border-slate-200 bg-white">
+            <div class="container mx-auto px-4">
+                <p>ระบบจัดการข้อมูลการประเมิน CTPD MSU &bull; นิสิตฝึกสอน ปีการศึกษา <span data-ctpd="academic-year">2569</span></p>
+                <p class="mt-1">พัฒนาโดย <strong class="text-slate-600">NANGSYTECH</strong> &copy; 2025
+                </p>
+            </div>
+        </footer>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 3. EDIT MODAL DIALOG -->
+    <!-- ========================================== -->
+    <div id="editModal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4">
+        <div
+            class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl border border-slate-100 relative overflow-hidden">
+            <!-- Modal Accent -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600">
+            </div>
+
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">แก้ไขข้อมูลการประเมิน
+                        </h2>
+                        <p class="text-xs text-slate-400">อัปเดตข้อมูลใน Google Sheet แบบเรียลไทม์</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal()"
+                    class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Hidden Row ID -->
+            <input type="hidden" id="editSheetRowNumber">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                <!-- Timestamp (Readonly) -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">เวลาบันทึกข้อมูล (แก้ไขไม่ได้)</label>
+                    <input id="editTimestamp" type="text" readonly
+                        class="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 text-xs font-mono cursor-not-allowed">
+                </div>
+
+                <!-- Evaluator -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">ผู้ประเมิน</label>
+                    <select id="editEvaluator"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="ครูพี่เลี้ยง">ครูพี่เลี้ยง</option>
+                        <option value="อาจารย์นิเทศก์">อาจารย์นิเทศก์</option>
+                        <option value="ผู้บริหารสถานศึกษา หรือ ผู้ที่ผู้บริหารสถานศึกษามอบหมายโดยไม่ใช่ครูพี่เลี้ยง">
+                            ผู้บริหารสถานศึกษา</option>
+                        <option value="ผู้แทนสถานศึกษา">ผู้แทนสถานศึกษา</option>
+                    </select>
+                </div>
+
+                <!-- Eval Time -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">ครั้งที่การประเมิน</label>
+                    <select id="editEvalTime"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="ครั้งที่ ๑ : สัปดาห์ที่ 3 - 5 ของภาคเรียน">ครั้งที่ ๑ (สัปดาห์ที่ 3 - 5)</option>
+                        <option value="ครั้งที่ ๒ : สัปดาห์ที่ 7 - 9 ของภาคเรียน">ครั้งที่ ๒ (สัปดาห์ที่ 7 - 9)</option>
+                        <option value="ครั้งที่ ๓ : สัปดาห์ที่ 11 - 14 ของภาคเรียน">ครั้งที่ ๓ (สัปดาห์ที่ 11 - 14)
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Prefix -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">คำนำหน้า</label>
+                    <select id="editPrefix"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="นาย">นาย</option>
+                        <option value="นางสาว">นางสาว</option>
+                    </select>
+                </div>
+
+                <!-- Major -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">สาขาวิชา</label>
+                    <input id="editMajor" type="text"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+
+                <!-- First Name -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">ชื่อ</label>
+                    <input id="editName" type="text"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+
+                <!-- Surname -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">นามสกุล</label>
+                    <input id="editSurname" type="text"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeModal()"
+                    class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-xs sm:text-sm transition-colors">
+                    ยกเลิก
+                </button>
+                <button type="button" onclick="saveEdit()"
+                    class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>บันทึกการแก้ไข</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 4. HELP GUIDE MODAL -->
+    <!-- ========================================== -->
+    <div id="helpModal"
+        class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-orange-500"></i>
+                    <span>คำแนะนำการใช้งานระบบ</span>
+                </h3>
+                <button type="button" onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="py-4 space-y-3 text-sm text-slate-600 leading-relaxed">
+                <div class="flex gap-2.5 items-start">
+                    <span
+                        class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">1</span>
+                    <p><strong>การค้นหาและกรองข้อมูล:</strong> สามารถพิมพ์ชื่อ นามสกุล
+                        หรือเลือกตัวกรองตามผู้ประเมินและครั้งการประเมินเพื่อดูข้อมูลเฉพาะกลุ่มได้ทันที</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span
+                        class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">2</span>
+                    <p><strong>การแก้ไขข้อมูล:</strong> กดปุ่ม "แก้ไข" เพื่อเปิดหน้าต่างปรับปรุงข้อมูลชื่อ นามสกุล
+                        หรือสาขาวิชา</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span
+                        class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">3</span>
+                    <p><strong>การยกเลิกผลการประเมิน:</strong> กดปุ่ม "ไม่เอาการประเมินนี้" ระบบจะเปลี่ยนสถานะเป็น
+                        "ไม่เอา" และแถวจะเป็นสีแดง</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span
+                        class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">4</span>
+                    <p><strong>การควบคุมรอบการประเมิน (Admin):</strong> สำหรับสิทธิ์ All
+                        สามารถกดเปิดหรือปิดรับการประเมินในแต่ละรอบสัปดาห์ได้โดยตรง</p>
+                </div>
+            </div>
+            <div class="pt-3 border-t border-slate-100 text-right">
+                <button type="button" onclick="closeHelpModal()"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-xl transition-colors">
+                    เข้าใจแล้ว
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 5. JAVASCRIPT LOGIC (100% PRESERVED CONTRACT) -->
+    <!-- ========================================== -->
+    <script>
+        let allSheetData = [];
+        let currentUserDepartment = null;
+
+        window.onload = function () {
+            const token = localStorage.getItem('authToken');
+            const department = localStorage.getItem('userDepartment');
+
+            if (token && department) {
+                Swal.fire({ title: 'กำลังตรวจสอบการเข้าสู่ระบบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                google.script.run.withSuccessHandler((isValid) => {
+                    Swal.close();
+                    if (isValid) {
+                        currentUserDepartment = department;
+                        document.getElementById('loginForm').classList.add('hidden');
+                        document.getElementById('mainContent').classList.remove('hidden');
+                        showAdminControlsIfApplicable();
+                        loadData();
+                    } else {
+                        logoutUserSession();
+                    }
+                }).validateToken(token);
+            } else {
+                logoutUserSession();
+            }
+        };
+
+        function logoutUserSession() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userDepartment');
+            currentUserDepartment = null;
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('adminControls').classList.add('hidden');
+            document.getElementById('deleteInvalidButton').setAttribute('hidden', true);
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                Swal.fire({ icon: 'error', title: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', showConfirmButton: false, timer: 1500 });
+                return;
+            }
+            Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            google.script.run.withSuccessHandler((result) => {
+                Swal.close();
+                if (result.success) {
+                    localStorage.setItem('authToken', result.token);
+                    localStorage.setItem('userDepartment', result.department);
+                    currentUserDepartment = result.department;
+                    document.getElementById('loginForm').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                    showAdminControlsIfApplicable();
+                    loadData();
+                } else {
+                    Swal.fire({ icon: 'error', title: result.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', showConfirmButton: false, timer: 2000 });
+                }
+            }).checkLogin(username, password);
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'ยืนยันการออกจากระบบ?', icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#ea580c', cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logoutUserSession();
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    const tableBody = document.getElementById('tableBody');
+                    if (tableBody) tableBody.innerHTML = '';
+                    const mobileContainer = document.getElementById('mobileCardContainer');
+                    if (mobileContainer) mobileContainer.innerHTML = '';
+                    allSheetData = [];
+                    Swal.fire({ icon: 'success', title: 'ออกจากระบบสำเร็จ', showConfirmButton: false, timer: 1500 });
+                }
+            });
+        }
+
+        function showAdminControlsIfApplicable() {
+            const adminControlsDiv = document.getElementById('adminControls');
+            const deleteButton = document.getElementById('deleteInvalidButton');
+            const deptBadge = document.getElementById('userDepartmentBadge');
+            const statDept = document.getElementById('statDepartment');
+
+            const isAllAccess = currentUserDepartment && currentUserDepartment.toLowerCase() === 'all';
+            const displayText = isAllAccess ? 'ผู้ดูแลระบบ (All)' : (currentUserDepartment || '-');
+
+            if (deptBadge) deptBadge.textContent = 'สิทธิ์: ' + displayText;
+            if (statDept) statDept.textContent = displayText;
+
+            if (isAllAccess) {
+                adminControlsDiv.classList.remove('hidden');
+                deleteButton.removeAttribute('hidden');
+                loadEvaluationStatuses();
+                loadCtpdSettings();
+            } else {
+                adminControlsDiv.classList.add('hidden');
+                deleteButton.setAttribute('hidden', true);
+            }
+        }
+
+        function loadEvaluationStatuses() {
+            Swal.fire({ title: 'กำลังโหลดสถานะฟอร์ม...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            google.script.run.withSuccessHandler(response => {
+                Swal.close();
+                if (response.error) {
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดสถานะการเปิด/ปิดฟอร์มได้: ' + response.error, 'error');
+                    ['1', '2', '3'].forEach(period => {
+                        const button = document.getElementById(`togglePeriod${period}`);
+                        if (button) {
+                            button.textContent = 'โหลดสถานะล้มเหลว';
+                            button.className = 'px-4 py-2.5 rounded-xl text-white text-sm font-medium w-full bg-slate-400';
+                        }
+                    });
+                } else {
+                    updateToggleButtonsUI(response);
+                }
+            }).withFailureHandler(err => {
+                Swal.close();
+                Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการติดต่อ Server (loadEvaluationStatuses): ' + err.message, 'error');
+            }).getEvaluationStatuses();
+        }
+
+        function updateToggleButtonsUI(statuses) {
+            const periodMapping = {
+                period1: { buttonId: 'togglePeriod1', status: statuses.period1 },
+                period2: { buttonId: 'togglePeriod2', status: statuses.period2 },
+                period3: { buttonId: 'togglePeriod3', status: statuses.period3 }
+            };
+
+            for (const key in periodMapping) {
+                const periodInfo = periodMapping[key];
+                const button = document.getElementById(periodInfo.buttonId);
+                if (button) {
+                    if (periodInfo.status === 'open') {
+                        button.innerHTML = '<i class="fa-solid fa-lock-open text-xs"></i><span>เปิดรับการประเมิน</span>';
+                        button.classList.remove('toggle-btn-close', 'bg-slate-400');
+                        button.classList.add('toggle-btn-open');
+                    } else if (periodInfo.status === 'close') {
+                        button.innerHTML = '<i class="fa-solid fa-lock text-xs"></i><span>ปิดรับการประเมิน</span>';
+                        button.classList.remove('toggle-btn-open', 'bg-slate-400');
+                        button.classList.add('toggle-btn-close');
+                    } else {
+                        button.innerHTML = '<i class="fa-solid fa-question text-xs"></i><span>สถานะไม่ชัดเจน</span>';
+                        button.classList.remove('toggle-btn-open', 'toggle-btn-close');
+                        button.classList.add('bg-slate-400');
+                    }
+                }
+            }
+        }
+
+        function toggleEvaluationPeriod(buttonElement) {
+            const periodNumber = buttonElement.dataset.period;
+            const currentStatusIsClosed = buttonElement.classList.contains('toggle-btn-close') || !buttonElement.classList.contains('toggle-btn-open');
+            const newStatus = currentStatusIsClosed ? 'open' : 'close';
+
+            const confirmText = newStatus === 'open' ?
+                `คุณต้องการ "เปิด" รับการประเมินสำหรับครั้งที่ ${periodNumber} หรือไม่?` :
+                `คุณต้องการ "ปิด" รับการประเมินสำหรับครั้งที่ ${periodNumber} หรือไม่? การปิดจะทำให้ผู้กรอกฟอร์มไม่เห็นตัวเลือกนี้ และหากปิดครบทุกครั้งฟอร์มจะไม่รับคำตอบ`;
+
+            Swal.fire({
+                title: 'ยืนยันการเปลี่ยนแปลงสถานะ',
+                text: confirmText,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: newStatus === 'open' ? '#16a34a' : '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังอัปเดตสถานะ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    google.script.run
+                        .withSuccessHandler(response => {
+                            Swal.close();
+                            if (response.success) {
+                                Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ!', text: response.message, timer: 2000, showConfirmButton: false });
+                                loadEvaluationStatuses();
+                            } else {
+                                Swal.fire('เกิดข้อผิดพลาด', response.error || 'ไม่สามารถอัปเดตสถานะได้', 'error');
+                                loadEvaluationStatuses();
+                            }
+                        })
+                        .withFailureHandler(err => {
+                            Swal.close();
+                            Swal.fire('การเชื่อมต่อล้มเหลว', 'ไม่สามารถติดต่อ Server ได้: ' + err.message, 'error');
+                            loadEvaluationStatuses();
+                        })
+                        .updateEvaluationStatus(periodNumber, newStatus, currentUserDepartment);
+                }
+            });
+        }
+
+        function loadData() {
+            const token = localStorage.getItem('authToken');
+            const department = localStorage.getItem('userDepartment');
+            if (!token || !department) {
+                Swal.fire({ icon: 'error', title: 'ข้อมูลการเข้าสู่ระบบไม่สมบูรณ์', text: 'กรุณาล็อกอินใหม่อีกครั้ง', showConfirmButton: true })
+                    .then(() => logout());
+                return;
+            }
+            Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            google.script.run.withSuccessHandler(displayData).getSheetData(token, department);
+        }
+
+        function displayData(response) {
+            Swal.close();
+            if (response && typeof response === 'object' && response.error) {
+                Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการโหลดข้อมูล', text: response.error, showConfirmButton: true });
+                allSheetData = [];
+                renderTable();
+                return;
+            }
+            if (!Array.isArray(response)) {
+                console.warn("Received non-array response for data:", response);
+                allSheetData = [];
+            } else {
+                allSheetData = response;
+            }
+            renderTable();
+        }
+
+        function getEvaluatorBadge(evaluator) {
+            if (evaluator === 'ไม่เอา') {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200"><i class="fa-solid fa-ban text-[10px]"></i>ไม่เอา</span>';
+            }
+            if (evaluator === 'ครูพี่เลี้ยง') {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-chalkboard-user text-[10px]"></i>ครูพี่เลี้ยง</span>';
+            }
+            if (evaluator === 'อาจารย์นิเทศก์') {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-user-tie text-[10px]"></i>อาจารย์นิเทศก์</span>';
+            }
+            if (evaluator.includes('ผู้บริหาร')) {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200"><i class="fa-solid fa-school text-[10px]"></i>ผู้บริหาร</span>';
+            }
+            if (evaluator.includes('ผู้แทน')) {
+                return '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-users-viewfinder text-[10px]"></i>ผู้แทน</span>';
+            }
+            return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${evaluator}</span>`;
+        }
+
+        function getPeriodBadge(period) {
+            if (!period) return '-';
+            if (period.includes('ครั้งที่ ๑') || period.includes('ครั้งที่ 1')) {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">ครั้งที่ ๑</span>';
+            }
+            if (period.includes('ครั้งที่ ๒') || period.includes('ครั้งที่ 2')) {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">ครั้งที่ ๒</span>';
+            }
+            if (period.includes('ครั้งที่ ๓') || period.includes('ครั้งที่ 3')) {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">ครั้งที่ ๓</span>';
+            }
+            return `<span class="text-xs text-slate-600">${period}</span>`;
+        }
+
+        function renderTable() {
+            const nameSearch = document.getElementById('nameSearch').value.toLowerCase();
+            const surnameSearch = document.getElementById('surnameSearch').value.toLowerCase();
+            const evaluatorFilter = document.getElementById('evaluatorFilter').value;
+            const evalTimeFilter = document.getElementById('evalTimeFilter').value;
+
+            const currentDataObjects = Array.isArray(allSheetData) ? allSheetData : [];
+
+            // Update stats
+            const totalCountElem = document.getElementById('statTotalCount');
+            const filteredCountElem = document.getElementById('statFilteredCount');
+            if (totalCountElem) totalCountElem.textContent = currentDataObjects.length.toLocaleString();
+
+            const filteredDataObjects = currentDataObjects.filter(item => {
+                const row = item.rowData;
+                if (!Array.isArray(row) || row.length < 7) return false;
+                return (row[4] || '').toLowerCase().includes(nameSearch) &&
+                    (row[5] || '').toLowerCase().includes(surnameSearch) &&
+                    (!evaluatorFilter || row[1] === evaluatorFilter) &&
+                    (!evalTimeFilter || row[2] === evalTimeFilter);
+            });
+
+            if (filteredCountElem) filteredCountElem.textContent = filteredDataObjects.length.toLocaleString();
+
+            const tableBody = document.getElementById('tableBody');
+            const mobileContainer = document.getElementById('mobileCardContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            tableBody.innerHTML = '';
+            if (mobileContainer) mobileContainer.innerHTML = '';
+
+            if (filteredDataObjects.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            } else {
+                if (emptyState) emptyState.classList.add('hidden');
+            }
+
+            filteredDataObjects.forEach((item) => {
+                const rowDisplayData = item.rowData;
+                const sheetRowNumber = item.originalSheetRow;
+
+                const isInvalid = rowDisplayData[1] === 'ไม่เอา';
+                const evaluatorBadge = getEvaluatorBadge(rowDisplayData[1] || '');
+                const periodBadge = getPeriodBadge(rowDisplayData[2] || '');
+
+                // 1) Render Desktop Table Row
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-sheet-row', sheetRowNumber);
+                tr.className = isInvalid ? 'bg-rose-50/70 hover:bg-rose-100/70 transition-colors' : 'hover:bg-slate-50/80 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 text-xs text-slate-500 font-mono">${rowDisplayData[0] || ''}</td>
+                    <td class="p-3">${evaluatorBadge}</td>
+                    <td class="p-3">${periodBadge}</td>
+                    <td class="p-3 text-slate-600">${rowDisplayData[3] || ''}</td>
+                    <td class="p-3 font-semibold text-slate-800">${rowDisplayData[4] || ''}</td>
+                    <td class="p-3 font-semibold text-slate-800">${rowDisplayData[5] || ''}</td>
+                    <td class="p-3 text-xs text-slate-600">${rowDisplayData[6] || ''}</td>
+                    <td class="p-3 text-center">
+                        <div class="inline-flex items-center gap-1.5">
+                            <button onclick="openEditModal(event)" class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition-colors" title="แก้ไขข้อมูล">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span>แก้ไข</span>
+                            </button>
+                            <button onclick="markAsInvalid(event)" class="inline-flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition-colors" title="ยกเลิกผลการประเมินนี้">
+                                <i class="fa-solid fa-ban"></i>
+                                <span>ไม่เอา</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+
+                // 2) Render Mobile Responsive Card
+                if (mobileContainer) {
+                    const card = document.createElement('div');
+                    card.setAttribute('data-sheet-row', sheetRowNumber);
+                    card.className = `p-4 rounded-2xl border shadow-xs transition-all ${isInvalid ? 'bg-rose-50/70 border-rose-200' : 'bg-white border-slate-100'}`;
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs">
+                            <span class="text-slate-400 font-mono">${rowDisplayData[0] || ''}</span>
+                            <div>${periodBadge}</div>
+                        </div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">
+                                    ${rowDisplayData[3] || ''}${rowDisplayData[4] || ''} ${rowDisplayData[5] || ''}
+                                </h4>
+                                <p class="text-xs text-slate-500 mt-0.5">สาขา: ${rowDisplayData[6] || '-'}</p>
+                            </div>
+                            <div>${evaluatorBadge}</div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100/80 flex items-center justify-end gap-2">
+                            <button onclick="openEditModal(event)" class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-2xs transition-colors">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span>แก้ไข</span>
+                            </button>
+                            <button onclick="markAsInvalid(event)" class="inline-flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-2xs transition-colors">
+                                <i class="fa-solid fa-ban"></i>
+                                <span>ไม่เอา</span>
+                            </button>
+                        </div>
+                    `;
+                    mobileContainer.appendChild(card);
+                }
+            });
+        }
+
+        function openEditModal(event) {
+            const rowElement = event.target.closest('[data-sheet-row]');
+            if (!rowElement) return;
+            const sheetRowNumber = parseInt(rowElement.getAttribute('data-sheet-row'));
+            const dataItem = allSheetData.find(item => item.originalSheetRow === sheetRowNumber);
+
+            if (!dataItem) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถค้นหาข้อมูลสำหรับแก้ไขได้', 'error');
+                return;
+            }
+            const rowToEdit = dataItem.rowData;
+            document.getElementById('editSheetRowNumber').value = sheetRowNumber;
+            document.getElementById('editTimestamp').value = rowToEdit[0] || '';
+            document.getElementById('editEvaluator').value = rowToEdit[1] || '';
+            document.getElementById('editEvalTime').value = rowToEdit[2] || '';
+            document.getElementById('editPrefix').value = rowToEdit[3] || '';
+            document.getElementById('editName').value = rowToEdit[4] || '';
+            document.getElementById('editSurname').value = rowToEdit[5] || '';
+            document.getElementById('editMajor').value = rowToEdit[6] || '';
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function saveEdit() {
+            const sheetRowNumber = parseInt(document.getElementById('editSheetRowNumber').value);
+            const dataItemIndex = allSheetData.findIndex(item => item.originalSheetRow === sheetRowNumber);
+
+            if (isNaN(sheetRowNumber) || (dataItemIndex === -1 && allSheetData.length > 0)) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ Index ไม่ถูกต้อง', 'error');
+                closeModal();
+                return;
+            }
+
+            let updatedRowData;
+            if (dataItemIndex !== -1) {
+                updatedRowData = [...allSheetData[dataItemIndex].rowData];
+            } else {
+                const defaultColumnCount = Math.max(7, allSheetData[0] ? allSheetData[0].rowData.length : 7);
+                updatedRowData = new Array(defaultColumnCount).fill('');
+            }
+
+            updatedRowData[0] = document.getElementById('editTimestamp').value;
+            updatedRowData[1] = document.getElementById('editEvaluator').value;
+            updatedRowData[2] = document.getElementById('editEvalTime').value;
+            updatedRowData[3] = document.getElementById('editPrefix').value;
+            updatedRowData[4] = document.getElementById('editName').value;
+            updatedRowData[5] = document.getElementById('editSurname').value;
+            updatedRowData[6] = document.getElementById('editMajor').value;
+
+            Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            google.script.run.withSuccessHandler((response) => {
+                Swal.close();
+                if (response && response.success) {
+                    if (dataItemIndex !== -1) {
+                        allSheetData[dataItemIndex].rowData = updatedRowData;
+                    }
+                    renderTable();
+                    closeModal();
+                    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500 });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: (response && response.error) ? response.error : 'ไม่สามารถบันทึกข้อมูลได้', showConfirmButton: true });
+                }
+            }).updateSheetData(sheetRowNumber, updatedRowData);
+        }
+
+        function markAsInvalid(event) {
+            const rowElement = event.target.closest('[data-sheet-row]');
+            if (!rowElement) return;
+            const sheetRowNumber = parseInt(rowElement.getAttribute('data-sheet-row'));
+            const dataItemIndex = allSheetData.findIndex(item => item.originalSheetRow === sheetRowNumber);
+
+            if (isNaN(sheetRowNumber) || dataItemIndex === -1) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถค้นหาข้อมูลได้', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'ยืนยันการยกเลิกการประเมินนี้?', text: "ข้อมูลผู้ประเมินจะถูกเปลี่ยนเป็น 'ไม่เอา'",
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#64748b', confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    const originalRowData = allSheetData[dataItemIndex].rowData;
+                    const updatedRowData = [...originalRowData];
+                    updatedRowData[1] = 'ไม่เอา';
+
+                    google.script.run.withSuccessHandler((response) => {
+                        Swal.close();
+                        if (response && response.success) {
+                            allSheetData[dataItemIndex].rowData = updatedRowData;
+                            renderTable();
+                            Swal.fire({ icon: 'success', title: 'ยกเลิกการประเมินสำเร็จ', showConfirmButton: false, timer: 1500 });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: (response && response.error) ? response.error : 'ไม่สามารถอัปเดตข้อมูลได้', showConfirmButton: true });
+                        }
+                    }).updateSheetData(sheetRowNumber, updatedRowData);
+                }
+            });
+        }
+
+        function deleteInvalidRows() {
+            if (currentUserDepartment !== 'all') {
+                Swal.fire('ข้อผิดพลาด', 'คุณไม่มีสิทธิ์ดำเนินการนี้', 'error');
+                return;
+            }
+            Swal.fire({
+                title: 'ยืนยันการลบการประเมินที่ไม่เอาทั้งหมด?', text: "การดำเนินการนี้ไม่สามารถย้อนกลับได้!",
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b', confirmButtonText: 'ยืนยันลบ', cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    google.script.run.withSuccessHandler((response) => {
+                        if (response && response.success) {
+                            Swal.fire({
+                                icon: 'info', title: `ลบ ${response.deletedCount} รายการเรียบร้อย`,
+                                text: 'กำลังโหลดข้อมูลใหม่อีกครั้ง...', showConfirmButton: false, timer: 2000
+                            }).then(() => {
+                                loadData();
+                            });
+                        } else {
+                            Swal.close();
+                            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการลบ', text: (response && response.error) ? response.error : 'ไม่สามารถลบข้อมูลได้', showConfirmButton: true });
+                        }
+                    }).deleteInvalidRows();
+                }
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('nameSearch').value = '';
+            document.getElementById('surnameSearch').value = '';
+            document.getElementById('evaluatorFilter').value = '';
+            document.getElementById('evalTimeFilter').value = '';
+            renderTable();
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('password');
+            const icon = document.getElementById('passwordToggleIcon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash text-sm';
+            } else {
+                passInput.type = 'password';
+                icon.className = 'fa-regular fa-eye text-sm';
+            }
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
+        function formatThaiDatePreview(rawDate) {
+            if (!rawDate) return '';
+            const trimmed = String(rawDate).trim();
+            const thaiMonths = [
+                'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน',
+                'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม',
+                'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            ];
+            const dmyMatch = trimmed.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+            if (dmyMatch) {
+                const day = parseInt(dmyMatch[1], 10);
+                const month = parseInt(dmyMatch[2], 10);
+                let year = parseInt(dmyMatch[3], 10);
+                if (month >= 1 && month <= 12) {
+                    if (year < 2400) year += 543;
+                    return `${day} ${thaiMonths[month - 1]} ${year}`;
+                }
+            }
+            const ymdMatch = trimmed.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+            if (ymdMatch) {
+                let year = parseInt(ymdMatch[1], 10);
+                const month = parseInt(ymdMatch[2], 10);
+                const day = parseInt(ymdMatch[3], 10);
+                if (month >= 1 && month <= 12) {
+                    if (year < 2400) year += 543;
+                    return `${day} ${thaiMonths[month - 1]} ${year}`;
+                }
+            }
+            return trimmed;
+        }
+
+        function updateDeadlinePreview() {
+            const inputEl = document.getElementById('settingDeadlineDate');
+            const previewEl = document.getElementById('previewDeadlineVal');
+            if (inputEl && previewEl) {
+                previewEl.textContent = formatThaiDatePreview(inputEl.value) || '-';
+            }
+        }
+
+        function updatePageYearElements(year) {
+            if (!year) return;
+            const elements = document.querySelectorAll('[data-ctpd="academic-year"]');
+            elements.forEach(el => { el.textContent = year; });
+        }
+
+        function loadCtpdSettings() {
+            google.script.run.withSuccessHandler(response => {
+                if (response && response.success) {
+                    const yearInput = document.getElementById('settingAcademicYear');
+                    const deadlineInput = document.getElementById('settingDeadlineDate');
+                    if (yearInput) yearInput.value = response.academicYear || '2569';
+                    if (deadlineInput) {
+                        deadlineInput.value = response.deadlineDate || '30/10/2026';
+                        updateDeadlinePreview();
+                    }
+                    updatePageYearElements(response.academicYear);
+                }
+            }).getCtpdSettings();
+        }
+
+        function saveCtpdSettings() {
+            if (currentUserDepartment !== 'all') {
+                Swal.fire('ข้อผิดพลาด', 'คุณไม่มีสิทธิ์ในการบันทึกการตั้งค่าระบบ', 'error');
+                return;
+            }
+            const academicYear = document.getElementById('settingAcademicYear').value.trim();
+            const deadlineDate = document.getElementById('settingDeadlineDate').value.trim();
+
+            if (!academicYear) {
+                Swal.fire('แจ้งเตือน', 'กรุณาระบุปีการศึกษา', 'warning');
+                return;
+            }
+            if (!deadlineDate) {
+                Swal.fire('แจ้งเตือน', 'กรุณาระบุกำหนดส่งข้อมูลเพิ่มเติม', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'กำลังบันทึกการตั้งค่า...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            google.script.run.withSuccessHandler(response => {
+                Swal.close();
+                if (response && response.success) {
+                    updatePageYearElements(academicYear);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ',
+                        text: 'อัปเดตปีการศึกษาและกำหนดส่งลงในชีทเรียบร้อยแล้ว',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('ข้อผิดพลาด', (response && response.error) ? response.error : 'ไม่สามารถบันทึกได้', 'error');
+                }
+            }).withFailureHandler(err => {
+                Swal.close();
+                Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
+            }).updateCtpdSettings(academicYear, deadlineDate, currentUserDepartment);
+        }
+
+        const deadlineInputElem = document.getElementById('settingDeadlineDate');
+        if (deadlineInputElem) {
+            deadlineInputElem.addEventListener('input', updateDeadlinePreview);
+        }
+
+        document.getElementById('nameSearch').addEventListener('input', renderTable);
+        document.getElementById('surnameSearch').addEventListener('input', renderTable);
+        document.getElementById('evaluatorFilter').addEventListener('change', renderTable);
+        document.getElementById('evalTimeFilter').addEventListener('change', renderTable);
+    </script>
+</body>
+
+</html>

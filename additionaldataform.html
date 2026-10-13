@@ -73,7 +73,7 @@
             </a>
             <div class="flex items-center gap-2">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                    ปีการศึกษา 2569
+                    ปีการศึกษา <span data-ctpd="academic-year">2569</span>
                 </span>
                 <button type="button" onclick="openHelpModal()" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-orange-600 py-1.5 px-2.5 rounded-lg border border-slate-200 hover:border-orange-300 transition-all">
                     <i class="fa-regular fa-circle-question"></i>
@@ -98,7 +98,7 @@
                 <h1 class="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
                     ข้อมูลเพิ่มเติมประกอบการ<br class="hidden sm:inline">กรอกคะแนนสมรรถนะ
                 </h1>
-                <p class="text-orange-600 font-medium text-sm mt-1">นิสิตฝึกสอน ประจำปีการศึกษา 2569</p>
+                <p class="text-orange-600 font-medium text-sm mt-1">นิสิตฝึกสอน ประจำปีการศึกษา <span data-ctpd="academic-year">2569</span></p>
                 <p class="text-slate-400 text-xs mt-0.5">ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู มหาวิทยาลัยมหาสารคาม</p>
             </div>
 
@@ -128,7 +128,7 @@
             <div class="bg-amber-50 border-l-4 border-amber-500 p-3.5 sm:p-4 rounded-r-xl mb-6 flex items-start gap-3">
                 <i class="fa-solid fa-calendar-check text-amber-600 mt-0.5 text-base"></i>
                 <div class="text-xs sm:text-sm text-amber-900 leading-relaxed">
-                    กรุณากรอกข้อมูลภายในวันที่ <span class="font-bold underline text-amber-700">30 ตุลาคม 2569</span>
+                    กรุณากรอกข้อมูลภายในวันที่ <span data-ctpd="deadline" id="dynamicDeadline" class="font-bold underline text-amber-700">30 ตุลาคม 2569</span>
                 </div>
             </div>
 
@@ -184,9 +184,9 @@
     
     <!-- Floating Messenger Button -->
     <a href="https://m.me/ctpd.edu.msu" target="_blank" rel="noopener noreferrer" 
-       class="fixed bottom-6 right-6 z-50 bg-[#0084FF] hover:bg-[#0074E4] text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center"
+       class="fixed bottom-6 right-6 z-40 bg-[#0084FF] hover:bg-[#0074E4] text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center"
        title="ติดต่อเราผ่าน Facebook Messenger">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1200px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger" class="w-8 h-8">
+        <i class="fa-brands fa-facebook-messenger text-2xl text-white"></i>
     </a>
 
     <!-- Help Modal -->
@@ -403,5 +403,6 @@
         searchInput.addEventListener('input', showSuggestions);
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>
+    <script src="checkstatus.js"></script>
 </body>
 </html>
