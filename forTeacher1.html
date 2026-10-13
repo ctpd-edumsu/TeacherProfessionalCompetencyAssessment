@@ -1,156 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบประเมินสมรรถนะทางวิชาชีพครู (สำหรับครูพี่เลี้ยง)</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 1 (สำหรับครูพี่เลี้ยง)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         body {
-            background-color: #FFE5B4; /* Light orange background */
-            font-family: 'Arial', sans-serif;
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
         }
-
-        h1 {
-            color: #FF8C00; /* Dark orange color */
+        /* Styling for suggestion list scrollbar */
+        #suggestions::-webkit-scrollbar {
+            width: 6px;
         }
-
-        .form-label {
-            color: #FF4500; /* Orange-red label color */
+        #suggestions::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 4px;
         }
-
-        .btn-primary {
-            background-color: #FF8C00; /* Dark orange button */
-            border-color: #FF8C00;
+        #suggestions::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
         }
-
-        .btn-primary:hover {
-            background-color: #FF4500; /* Darker orange on hover */
-            border-color: #FF4500;
+        #suggestions::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
         }
-
-        /* Styling for form container */
-        .form-container {
-            background-color: white; /* White background for form */
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid #ddd;
-        }
-
-        /* Styling for suggestion list */
-        #suggestions {
-            display: none;
-            position: absolute;
-            background-color: white;
-            border: 1px solid #ddd;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            width: 100%;
-        }
-
-        .list-group-item {
-            cursor: pointer;
-        }
-
-        .list-group-item:hover {
-            background-color: #f0f0f0;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            h1 {
-                font-size: 24px;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
-        
-        h4 {
-        margin-bottom: 25px; /* Increase spacing below subtitle */
-    }
-
-    .form-label {
-        margin-top: 5px; /* Add some space above the label */
-    }
-    
-    /* Floating Messenger button styling */
-.messenger-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #79b8f2;
-    border-radius: 50%;
-    padding: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    transition: transform 0.3s;
-}
-
-.messenger-button:hover {
-    transform: scale(1.1);
-}
-
-footer {
-      margin-top: 20px;
-      padding: 10px;
-      text-align: center;
-      font-size: 0.9em;
-      color: #666;
-    }
-
-
     </style>
 </head>
-<body class="p-5">
-    <!-- Logo at the top -->
-    <div class="text-center mb-4">
-        <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="img-fluid" style="max-width: 150px;">
-    </div>
+<body class="bg-slate-50 min-h-screen flex flex-col text-slate-800 antialiased">
 
-    <!-- Form container with white background -->
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6 col-md-8 col-sm-12">
-                <div class="form-container">
-                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 1</h1>
-                    <h4 class="text-center">(สำหรับครูพี่เลี้ยง)</h4>
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="index.html" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-orange-600 transition-colors py-2 px-3 rounded-lg hover:bg-orange-50">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>กลับหน้าหลัก</span>
+            </a>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
+                    ครั้งที่ 1 • ปีการศึกษา 2569
+                </span>
+                <button type="button" onclick="openHelpModal()" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-orange-600 py-1.5 px-2.5 rounded-lg border border-slate-200 hover:border-orange-300 transition-all">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>คำแนะนำ</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-                    <!-- Search input for typing name -->
-                    <div class="mb-3 position-relative">
-                        <label for="search-name" class="form-label">พิมพ์ชื่อ-นามสกุลนิสิต ที่ต้องการประเมิน :</label>
-                        <input type="text" id="search-name" class="form-control" oninput="showSuggestions()">
-                        <div id="suggestions" class="list-group"></div>
-                    </div>
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-lg bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 relative overflow-hidden">
+            
+            <!-- Top Orange Gradient Accent -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600"></div>
 
-                    <!-- Button to go to the evaluation link -->
-                    <button id="evaluationButton" class="btn btn-primary" disabled>ทำแบบประเมิน (Google Form)</button>
-                    <!-- Floating Messenger button -->
-<a href="https://m.me/ctpd.edu.msu" target="_blank" class="messenger-button">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1200px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger" class="img-fluid" style="width: 50px;">
-</a>
-
+            <!-- Role Badge & Header -->
+            <div class="text-center mt-2 mb-6">
+                <div class="w-16 h-16 mx-auto bg-orange-50 rounded-2xl flex items-center justify-center mb-4 text-orange-500 shadow-sm border border-orange-100">
+                    <i class="fa-solid fa-user-check text-2xl"></i>
                 </div>
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 mb-2">
+                    <i class="fa-solid fa-clock text-[10px]"></i> สัปดาห์ที่ 3 - 5 ของภาคเรียน
+                </div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                    แบบประเมินสมรรถนะทางวิชาชีพครู ครั้งที่ 1
+                </h1>
+                <p class="text-orange-600 font-semibold text-sm mt-1">(สำหรับครูพี่เลี้ยง)</p>
+                <p class="text-slate-600 font-medium text-xs mt-1">นิสิตฝึกสอน ปีการศึกษา 2569</p>
+                <p class="text-slate-400 text-xs mt-0.5">ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู มหาวิทยาลัยมหาสารคาม</p>
+            </div>
+
+            <!-- Step-by-step Usage Guide Indicator -->
+            <div class="bg-slate-50 rounded-2xl p-3.5 mb-6 border border-slate-100">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-orange-500"></i>
+                    <span>ขั้นตอนการประเมิน (3 ขั้นตอน)</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-white p-2 rounded-xl shadow-2xs border border-slate-100">
+                        <span class="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold mb-1">1</span>
+                        <p class="text-slate-600 font-medium">พิมพ์ชื่อนิสิต</p>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl shadow-2xs border border-slate-100">
+                        <span class="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold mb-1">2</span>
+                        <p class="text-slate-600 font-medium">เลือกจากรายการ</p>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl shadow-2xs border border-slate-100">
+                        <span class="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold mb-1">3</span>
+                        <p class="text-slate-600 font-medium">ทำแบบประเมิน</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Indicator Badge -->
+            <div id="dataStatusBadge" class="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-orange-50/70 text-orange-700 border border-orange-100 mb-4">
+                <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-notch fa-spin text-orange-500 text-[10px]" id="statusIcon"></i>
+                    <span id="statusText">กำลังโหลดฐานข้อมูลนิสิต...</span>
+                </span>
+                <span id="dataCountBadge" class="font-semibold text-orange-800">กรุณารอสักครู่</span>
+            </div>
+
+            <!-- Search Section -->
+            <div class="mb-3 position-relative relative">
+                <label for="search-name" class="block text-sm font-medium text-slate-700 mb-2">
+                    <i class="fa-solid fa-user text-orange-500 mr-1.5"></i>พิมพ์ชื่อ-นามสกุลนิสิต ที่ต้องการประเมิน :
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+                    <input type="text" id="search-name" class="w-full pl-10 pr-10 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-base" 
+                        placeholder="พิมพ์ชื่อหรือนามสกุลนิสิต..." autocomplete="off" oninput="showSuggestions()">
+                    <button type="button" id="clearSearchBtn" onclick="clearSearchInput()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors hidden">
+                        <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    </button>
+                </div>
+                
+                <!-- Suggestions List -->
+                <div id="suggestions" class="list-group absolute z-20 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl hidden max-h-60 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+
+            <!-- Button to go to the evaluation link -->
+            <button id="evaluationButton" class="w-full mt-6 px-6 py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-300" disabled>
+                <span>ทำแบบประเมิน (Google Form)</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- Floating Messenger Button -->
+    <a href="https://m.me/ctpd.edu.msu" target="_blank" rel="noopener noreferrer" 
+       class="messenger-button fixed bottom-6 right-6 z-40 bg-[#0084FF] hover:bg-[#0074E4] text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center"
+       title="ติดต่อเราผ่าน Facebook Messenger">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1200px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger" class="w-8 h-8">
+    </a>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-orange-500"></i>
+                    <span>คำแนะนำการทำแบบประเมิน</span>
+                </h3>
+                <button type="button" onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="py-4 space-y-3 text-sm text-slate-600 leading-relaxed">
+                <div class="flex gap-2.5 items-start">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0 mt-0.5">1</span>
+                    <p>พิมพ์ชื่อหรือนามสกุลของนิสิตในช่องค้นหา</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0 mt-0.5">2</span>
+                    <p>คลิกเลือกชื่อนิสิตที่ต้องการประเมินจากรายการ</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0 mt-0.5">3</span>
+                    <p>กดปุ่ม <span class="text-orange-600 font-semibold">"ทำแบบประเมิน (Google Form)"</span> เพื่อเปิดแบบประเมินประจำตัวนิสิต</p>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs text-orange-800 mt-2">
+                    <i class="fa-solid fa-info-circle mr-1 text-orange-500"></i> หากไม่พบชื่อนิสิต แสดงว่านิสิตได้รับการประเมินในครั้งนี้เรียบร้อยแล้ว
+                </div>
+            </div>
+            <div class="pt-2 text-right">
+                <button type="button" onclick="closeHelpModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">
+                    เข้าใจแล้ว
+                </button>
             </div>
         </div>
     </div>
 
-    <footer>
-        เว็บไซต์นี้จัดทำโดย 
-            <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-blue-500 hover:underline">
-                NANGSYTECH
-            </a> 
-            <br>ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <p class="text-slate-500 text-xs mb-1">
+                เว็บไซต์นี้จัดทำโดย 
+                <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-orange-500 font-semibold hover:text-orange-600 hover:underline transition-colors">
+                    NANGSYTECH
+                </a> 
+            </p>
+            <p class="text-slate-400 text-[11px]">
+                ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+            </p>
+        </div>
     </footer>
+
     <script src="checkstatus.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -159,6 +226,12 @@ footer {
             const suggestionsContainer = document.getElementById('suggestions');
             const evaluationButton = document.getElementById('evaluationButton');
             const searchContainer = document.querySelector('.mb-3.position-relative');
+            const searchInput = document.getElementById('search-name');
+            const clearSearchBtn = document.getElementById('clearSearchBtn');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const dataCountBadge = document.getElementById('dataCountBadge');
+            
             let data = [];
             let evaluatedNames = [];
         
@@ -172,8 +245,8 @@ footer {
                         status: row[2],
                         time: row[3]
                     })).filter(evaluated => 
-evaluated.status === 'ครูพี่เลี้ยง' && 
-                evaluated.time === 'ครั้งที่ ๑ : สัปดาห์ที่ 3 - 5 ของภาคเรียน'
+                        evaluated.status === 'ครูพี่เลี้ยง' && 
+                        evaluated.time === 'ครั้งที่ ๑ : สัปดาห์ที่ 3 - 5 ของภาคเรียน'
                     );
                 })
                 .then(() => {
@@ -188,35 +261,55 @@ evaluated.status === 'ครูพี่เลี้ยง' &&
                                     evaluated.firstName === firstName && evaluated.lastName === lastName
                                 );
                             });
+
+                            // Update status badge
+                            if (statusIcon && statusText && dataCountBadge) {
+                                statusIcon.className = "fa-solid fa-circle-check text-emerald-500 text-[10px]";
+                                statusText.innerText = "พร้อมทำการประเมิน";
+                                dataCountBadge.innerText = `${data.length} รายชื่อ`;
+                            }
                         })
-                        .catch(error => console.error('Error fetching main data:', error));
+                        .catch(error => {
+                            console.error('Error fetching main data:', error);
+                            if (statusText) statusText.innerText = "โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรช";
+                        });
                 })
-                .catch(error => console.error('Error fetching evaluation data:', error));
+                .catch(error => {
+                    console.error('Error fetching evaluation data:', error);
+                    if (statusText) statusText.innerText = "โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรช";
+                });
         
             async function showSuggestions() {
-                const input = document.getElementById('search-name').value.toLowerCase().trim();
+                const input = searchInput.value.toLowerCase().trim();
                 suggestionsContainer.innerHTML = '';
         
+                if (input.length > 0) {
+                    clearSearchBtn.classList.remove('hidden');
+                } else {
+                    clearSearchBtn.classList.add('hidden');
+                }
+
                 if (input === "") {
                     suggestionsContainer.style.display = 'none';
                     return;
                 }
         
-                const matches = data.filter(row => row[3].toLowerCase().includes(input));
+                const matches = data.filter(row => row[3] && row[3].toLowerCase().includes(input));
         
                 if (matches.length > 0) {
                     matches.forEach(match => {
                         const suggestionItem = document.createElement('div');
-                        suggestionItem.className = 'list-group-item';
-                        suggestionItem.textContent = match[3];
+                        suggestionItem.className = 'list-group-item px-4 py-3 cursor-pointer hover:bg-orange-50 text-slate-700 text-sm transition-colors border-b border-slate-100 last:border-none flex items-center justify-between';
+                        suggestionItem.innerHTML = `<span class="font-medium text-slate-800">${match[3]}</span> <span class="text-xs text-orange-600 bg-orange-100 px-2.5 py-1 rounded-full font-medium">เลือก</span>`;
                         suggestionItem.onclick = () => {
-                            document.getElementById('search-name').value = match[3];
+                            searchInput.value = match[3];
                             evaluationButton.disabled = false;
+                            clearSearchBtn.classList.remove('hidden');
                             evaluationButton.onclick = function() {
                                 const selectedLink = match[6];
                                 window.open(selectedLink, '_blank');
                                 evaluationButton.style.display = 'none';
-                        searchContainer.innerHTML = '<div class="text-center mt-3"><button class="btn btn-warning" onclick="location.reload();">ประเมินนิสิตคนอื่นๆ</button></div>';
+                                searchContainer.innerHTML = '<div class="text-center mt-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-200"><div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-check"></i></div><h3 class="text-base font-bold text-emerald-800 mb-1">เปิดแบบประเมินเรียบร้อยแล้ว</h3><p class="text-xs text-emerald-600 mb-4">หากท่านประเมินเสร็จสิ้นแล้ว สามารถประเมินนิสิตคนต่อไปได้</p><button class="w-full sm:w-auto px-6 py-3 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold rounded-xl shadow-md transition-all inline-flex items-center justify-center gap-2" onclick="location.reload();"><i class="fa-solid fa-rotate-right"></i> ประเมินนิสิตคนอื่นๆ</button></div>';
                             };
                             suggestionsContainer.style.display = 'none';
                         };
@@ -224,12 +317,44 @@ evaluated.status === 'ครูพี่เลี้ยง' &&
                     });
                     suggestionsContainer.style.display = 'block';
                 } else {
-                    suggestionsContainer.style.display = 'none';
+                    const noResult = document.createElement('div');
+                    noResult.className = 'px-4 py-3 text-slate-400 text-sm text-center italic';
+                    noResult.textContent = 'ไม่พบรายชื่อนิสิต (หรืออาจได้รับการประเมินแล้ว)';
+                    suggestionsContainer.appendChild(noResult);
+                    suggestionsContainer.style.display = 'block';
                 }
             }
         
             window.showSuggestions = showSuggestions;
+
+            window.clearSearchInput = function() {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+                suggestionsContainer.style.display = 'none';
+                evaluationButton.disabled = true;
+                searchInput.focus();
+            };
         });
-</script>
+
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('search-name');
+            const suggestionsContainer = document.getElementById('suggestions');
+            if (searchInput && suggestionsContainer && !searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+            }
+            const helpModal = document.getElementById('helpModal');
+            if (e.target === helpModal) {
+                closeHelpModal();
+            }
+        });
+    </script>
 </body>
 </html>

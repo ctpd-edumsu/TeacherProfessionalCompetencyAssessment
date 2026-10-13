@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบกรอกข้อมูลเพิ่มเติมประกอบคะแนนสมรรถนะ นิสิตฝึกสอน 2568</title>
+    <title>ระบบกรอกข้อมูลเพิ่มเติมประกอบคะแนนสมรรถนะ นิสิตฝึกสอน ปีการศึกษา 2569</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts (Prompt) -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -23,9 +28,12 @@
                         sans: ['Prompt', 'sans-serif'],
                     },
                     colors: {
-                        msu: {
-                            primary: '#F0C419', // MSU Yellow theme idea
-                            secondary: '#607D8B',
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
                         }
                     }
                 }
@@ -36,14 +44,13 @@
     <style>
         body {
             font-family: 'Prompt', sans-serif;
-            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
         /* Custom Scrollbar for suggestions */
         #suggestions::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         #suggestions::-webkit-scrollbar-track {
-            background: #f1f1f1; 
+            background: #f1f5f9; 
             border-radius: 4px;
         }
         #suggestions::-webkit-scrollbar-thumb {
@@ -55,83 +62,184 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+<body class="bg-slate-50 min-h-screen flex flex-col text-slate-800 antialiased">
 
-    <!-- Main Card -->
-    <div class="w-full max-w-lg bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl p-8 border border-white/20 relative overflow-hidden">
-        
-        <!-- Decoration Header Line -->
-        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-
-        <!-- Logo Area -->
-        <div class="text-center mb-8">
-            <div class="inline-block p-2 rounded-full bg-white shadow-md mb-4">
-                <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="w-20 h-20 object-contain">
-            </div>
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 leading-tight">
-                ข้อมูลเพิ่มเติมประกอบการ<br>กรอกคะแนนสมรรถนะ
-            </h2>
-            <p class="text-gray-500 text-sm mt-1">นิสิตฝึกสอน ประจำปีการศึกษา 2568</p>
-        </div>
-
-        <!-- Warning Badge -->
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r mb-6">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <p class="text-red-600 font-medium text-sm">
-                    กรุณากรอกข้อมูลภายในวันที่ <span class="font-bold underline">10 กุมภาพันธ์ 2569</span>
-                </p>
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="index.html" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-orange-600 transition-colors py-2 px-3 rounded-lg hover:bg-orange-50">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>กลับหน้าหลัก</span>
+            </a>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                    ปีการศึกษา 2569
+                </span>
+                <button type="button" onclick="openHelpModal()" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-orange-600 py-1.5 px-2.5 rounded-lg border border-slate-200 hover:border-orange-300 transition-all">
+                    <i class="fa-regular fa-circle-question"></i>
+                    <span>คำแนะนำ</span>
+                </button>
             </div>
         </div>
+    </header>
 
-        <!-- Search Section -->
-        <div class="relative w-full">
-            <label for="search-name" class="block text-sm font-medium text-gray-700 mb-2 pl-1">ค้นหารายชื่อนิสิต</label>
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <input type="text" id="search-name" placeholder="พิมพ์ชื่อ-นามสกุล..." 
-                    class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 shadow-sm placeholder-gray-400">
-            </div>
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 relative overflow-hidden">
             
-            <!-- Suggestions List -->
-            <div id="suggestions" class="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto divide-y divide-gray-100"></div>
-        </div>
+            <!-- Top Orange Gradient Accent -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600"></div>
 
-        <!-- Action Button -->
-        <button id="evaluationButton" 
-            class="group w-full mt-6 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
-            <span>เข้าสู่แบบฟอร์มกรอกข้อมูล</span>
-            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-        </button>
-
-        <!-- Success/Confirmation Message -->
-        <div id="confirmationMessage" class="mt-6 p-6 bg-green-50 rounded-xl border border-green-200 text-center hidden animate-fade-in-up">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <!-- Logo & Title Header -->
+            <div class="text-center mt-2 mb-6">
+                <div class="inline-flex p-3 rounded-2xl bg-orange-50 border border-orange-100 shadow-sm mb-4">
+                    <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo CTPD" class="w-16 h-16 object-contain">
+                </div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                    ข้อมูลเพิ่มเติมประกอบการ<br class="hidden sm:inline">กรอกคะแนนสมรรถนะ
+                </h1>
+                <p class="text-orange-600 font-medium text-sm mt-1">นิสิตฝึกสอน ประจำปีการศึกษา 2569</p>
+                <p class="text-slate-400 text-xs mt-0.5">ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู มหาวิทยาลัยมหาสารคาม</p>
             </div>
-            <h3 class="text-lg font-medium text-green-800">กำลังดำเนินการ</h3>
-            <p class="text-sm text-green-700 mt-2">
-                หากท่านกรอกข้อมูลเสร็จเรียบร้อยแล้ว <br>สามารถตรวจสอบสถานะได้
-                <a href="https://docs.google.com/spreadsheets/d/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/edit?usp=sharing" target="_blank" class="font-bold underline hover:text-green-900 transition">ที่นี่</a>
-            </p>
+
+            <!-- Step-by-step Usage Guide Indicator -->
+            <div class="bg-slate-50 rounded-2xl p-3.5 mb-6 border border-slate-100">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-orange-500"></i>
+                    <span>ขั้นตอนการดำเนินการ (3 ขั้นตอน)</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-white p-2 rounded-xl shadow-2xs border border-slate-100">
+                        <span class="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold mb-1">1</span>
+                        <p class="text-slate-600 font-medium">พิมพ์ค้นหา</p>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl shadow-2xs border border-slate-100">
+                        <span class="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold mb-1">2</span>
+                        <p class="text-slate-600 font-medium">เลือกชื่อนิสิต</p>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl shadow-2xs border border-slate-100">
+                        <span class="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold mb-1">3</span>
+                        <p class="text-slate-600 font-medium">เข้าสู่แบบฟอร์ม</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning / Deadline Badge -->
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-3.5 sm:p-4 rounded-r-xl mb-6 flex items-start gap-3">
+                <i class="fa-solid fa-calendar-check text-amber-600 mt-0.5 text-base"></i>
+                <div class="text-xs sm:text-sm text-amber-900 leading-relaxed">
+                    กรุณากรอกข้อมูลภายในวันที่ <span class="font-bold underline text-amber-700">30 ตุลาคม 2569</span>
+                </div>
+            </div>
+
+            <!-- Search Section -->
+            <div class="relative w-full">
+                <label for="search-name" class="block text-sm font-medium text-slate-700 mb-2">
+                    <i class="fa-solid fa-user-tag text-orange-500 mr-1.5"></i>ค้นหารายชื่อนิสิต
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+                    <input type="text" id="search-name" placeholder="พิมพ์ชื่อหรือนามสกุลนิสิต..." autocomplete="off"
+                        class="w-full pl-10 pr-10 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-base">
+                    <button type="button" id="clearSearchBtn" onclick="clearSearchInput()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors hidden">
+                        <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    </button>
+                </div>
+                
+                <!-- Suggestions List -->
+                <div id="suggestions" class="absolute z-20 w-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl hidden max-h-60 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+
+            <!-- Action Button -->
+            <button id="evaluationButton" 
+                class="group w-full mt-6 px-6 py-3.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-300">
+                <span>เข้าสู่แบบฟอร์มกรอกข้อมูล</span>
+                <i class="fa-solid fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+            </button>
+
+            <!-- Success/Confirmation Message -->
+            <div id="confirmationMessage" class="mt-6 p-6 bg-emerald-50 rounded-2xl border border-emerald-200 text-center hidden">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 mb-3 text-xl">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-emerald-800">เปิดแบบฟอร์มเรียบร้อยแล้ว</h3>
+                <p class="text-sm text-emerald-700 mt-2 leading-relaxed">
+                    หากท่านกรอกข้อมูลเสร็จเรียบร้อยแล้ว <br>สามารถตรวจสอบสถานะได้
+                    <a href="https://docs.google.com/spreadsheets/d/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/edit?usp=sharing" target="_blank" class="font-bold underline hover:text-emerald-900 transition-colors inline-flex items-center gap-1">
+                        <span>ที่นี่</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                    </a>
+                </p>
+                <div class="mt-4">
+                    <button type="button" onclick="location.reload();" class="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-900 font-medium bg-emerald-100 hover:bg-emerald-200 py-1.5 px-3 rounded-lg transition-colors">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>กรอกข้อมูลให้นิสิตคนอื่นๆ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Floating Messenger Button -->
+    <a href="https://m.me/ctpd.edu.msu" target="_blank" rel="noopener noreferrer" 
+       class="fixed bottom-6 right-6 z-50 bg-[#0084FF] hover:bg-[#0074E4] text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center"
+       title="ติดต่อเราผ่าน Facebook Messenger">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1200px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger" class="w-8 h-8">
+    </a>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-orange-500"></i>
+                    <span>คำแนะนำการใช้งาน</span>
+                </h3>
+                <button type="button" onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="py-4 space-y-3 text-sm text-slate-600 leading-relaxed">
+                <div class="flex gap-2.5 items-start">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0 mt-0.5">1</span>
+                    <p>พิมพ์ชื่อหรือนามสกุลของนิสิตในช่องค้นหา ระบบจะแนะนำรายชื่อที่ตรงกัน</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0 mt-0.5">2</span>
+                    <p>คลิกเลือกชื่อนิสิตที่ต้องการจากรายการที่แสดงขึ้นมา</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs shrink-0 mt-0.5">3</span>
+                    <p>กดปุ่ม <span class="text-orange-600 font-semibold">"เข้าสู่แบบฟอร์มกรอกข้อมูล"</span> ระบบจะเปิด Google Form ประจำตัวนิสิตในแท็บใหม่</p>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs text-orange-800 mt-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-1 text-orange-500"></i> หากค้นหาไม่พบรายชื่อ อาจเป็นเพราะมีการกรอกข้อมูลเรียบร้อยแล้ว หรือสามารถตรวจสอบสถานะได้จากลิงก์ที่แสดง
+                </div>
+            </div>
+            <div class="pt-2 text-right">
+                <button type="button" onclick="closeHelpModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">
+                    เข้าใจแล้ว
+                </button>
+            </div>
         </div>
     </div>
-    
+
     <!-- Footer -->
-    <footer class="mt-8 text-center space-y-2">
-        <p class="text-gray-500 text-xs">
-            เว็บไซต์นี้จัดทำโดย 
-            <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-indigo-500 font-semibold hover:text-indigo-700 transition">
-                NANGSYTECH
-            </a> 
-        </p>
-        <p class="text-gray-400 text-[10px] max-w-xs mx-auto leading-relaxed">
-            ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู <br>คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
-        </p>
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <p class="text-slate-500 text-xs mb-1">
+                เว็บไซต์นี้จัดทำโดย 
+                <a href="https://www.instagram.com/nangsytech" target="_blank" class="text-orange-500 font-semibold hover:text-orange-600 hover:underline transition-colors">
+                    NANGSYTECH
+                </a> 
+            </p>
+            <p class="text-slate-400 text-[11px]">
+                ศูนย์ฝึกประสบการณ์และพัฒนาวิชาชีพครู คณะศึกษาศาสตร์ มหาวิทยาลัยมหาสารคาม
+            </p>
+        </div>
     </footer>
-    
 
     <script>
         const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1js2CJoNjHPH1PcwvF4H0iJGeYZa4nDjx9kulF4Cgu7g/values/namedata?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
@@ -140,6 +248,7 @@
         const evaluationButton = document.getElementById('evaluationButton');
         const searchInput = document.getElementById('search-name');
         const confirmationMessage = document.getElementById('confirmationMessage');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
         let data = [];
         let evaluatedNames = [];
         let debounceTimer;
@@ -156,14 +265,14 @@
         function showLoadingProgress() {
             Swal.fire({
                 title: 'กำลังโหลดข้อมูล',
-                html: '<span class="text-sm text-gray-500">กรุณารอสักครู่...</span>',
+                html: '<span class="text-sm text-slate-500">กรุณารอสักครู่...</span>',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
                 },
                 customClass: {
                     popup: 'rounded-2xl',
-                    title: 'font-sans text-xl text-gray-700',
+                    title: 'font-sans text-xl text-slate-700',
                 }
             });
         }
@@ -194,9 +303,6 @@
                 }
 
                 Swal.close();
-                // Optional: Show success toast
-                // Toast.fire({ icon: 'success', title: 'โหลดข้อมูลสำเร็จ' });
-                
             } catch (error) {
                 Swal.close();
                 Swal.fire({
@@ -211,6 +317,13 @@
 
         function showSuggestions() {
             clearTimeout(debounceTimer);
+            const inputVal = searchInput.value.trim();
+            if (inputVal.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+
             debounceTimer = setTimeout(() => {
                 const input = searchInput.value.toLowerCase().trim();
                 suggestionsContainer.innerHTML = '';
@@ -225,14 +338,13 @@
                 if (matches.length > 0) {
                     matches.forEach(match => {
                         const suggestionItem = document.createElement('div');
-                        // Improved suggestion item styling
-                        suggestionItem.className = 'px-4 py-3 cursor-pointer hover:bg-indigo-50 text-gray-700 text-sm transition-colors border-b border-gray-50 last:border-none flex items-center justify-between';
+                        suggestionItem.className = 'px-4 py-3 cursor-pointer hover:bg-orange-50 text-slate-700 text-sm transition-colors border-b border-slate-100 last:border-none flex items-center justify-between';
                         
-                        // Add an icon or symbol
-                        suggestionItem.innerHTML = `<span>${match[3]}</span> <span class="text-xs text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full">เลือก</span>`;
+                        suggestionItem.innerHTML = `<span class="font-medium text-slate-800">${match[3]}</span> <span class="text-xs text-orange-600 bg-orange-100 px-2.5 py-1 rounded-full font-medium">เลือก</span>`;
                         
                         suggestionItem.onclick = () => {
                             searchInput.value = match[3];
+                            clearSearchBtn.classList.remove('hidden');
                             
                             // Setup Button Action
                             evaluationButton.onclick = function() {
@@ -254,7 +366,7 @@
                 } else {
                     // Show "No results" state
                     const noResult = document.createElement('div');
-                    noResult.className = 'px-4 py-3 text-gray-400 text-sm text-center italic';
+                    noResult.className = 'px-4 py-3 text-slate-400 text-sm text-center italic';
                     noResult.textContent = 'ไม่พบรายชื่อนิสิต (หรืออาจประเมินไปแล้ว)';
                     suggestionsContainer.appendChild(noResult);
                     suggestionsContainer.classList.remove('hidden');
@@ -262,10 +374,29 @@
             }, 300);
         }
 
+        function clearSearchInput() {
+            searchInput.value = '';
+            clearSearchBtn.classList.add('hidden');
+            suggestionsContainer.classList.add('hidden');
+            searchInput.focus();
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
         // Close suggestions when clicking outside
         document.addEventListener('click', function(e) {
             if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
                 suggestionsContainer.classList.add('hidden');
+            }
+            const helpModal = document.getElementById('helpModal');
+            if (e.target === helpModal) {
+                closeHelpModal();
             }
         });
 
