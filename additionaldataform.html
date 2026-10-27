@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบกรอกข้อมูลเพิ่มเติมประกอบคะแนนสมรรถนะ นิสิตฝึกสอน ปีการศึกษา 2569</title>
+    <title>ระบบกรอกข้อมูลเพิ่มเติมประกอบคะแนนสมรรถนะ นิสิตฝึกสอน</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -252,6 +252,7 @@
         let data = [];
         let evaluatedNames = [];
         let debounceTimer;
+        let selectedStudent = null;
 
         // Custom SweetAlert Styling
         const Toast = Swal.mixin({
@@ -318,6 +319,9 @@
         function showSuggestions() {
             clearTimeout(debounceTimer);
             const inputVal = searchInput.value.trim();
+            if (selectedStudent && inputVal !== selectedStudent.name) {
+                selectedStudent = null;
+            }
             if (inputVal.length > 0) {
                 clearSearchBtn.classList.remove('hidden');
             } else {
@@ -344,20 +348,11 @@
                         
                         suggestionItem.onclick = () => {
                             searchInput.value = match[3];
-                            clearSearchBtn.classList.remove('hidden');
-                            
-                            // Setup Button Action
-                            evaluationButton.onclick = function() {
-                                const selectedLink = match[4];
-                                if (selectedLink) {
-                                    window.open(selectedLink, '_blank');
-                                }
-                                // UI Transition
-                                searchInput.parentElement.classList.add('hidden'); // Hide search container
-                                evaluationButton.classList.add('hidden');
-                                confirmationMessage.classList.remove('hidden');
+                            selectedStudent = {
+                                name: match[3],
+                                link: match[4]
                             };
-                            
+                            clearSearchBtn.classList.remove('hidden');
                             suggestionsContainer.classList.add('hidden');
                         };
                         suggestionsContainer.appendChild(suggestionItem);
@@ -376,9 +371,88 @@
 
         function clearSearchInput() {
             searchInput.value = '';
+            selectedStudent = null;
             clearSearchBtn.classList.add('hidden');
             suggestionsContainer.classList.add('hidden');
             searchInput.focus();
+        }
+
+        function handleEvaluationButtonClick() {
+            if (!selectedStudent || !selectedStudent.link) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาเลือกรายชื่อนิสิต',
+                    text: 'กรุณาพิมพ์ค้นหาและคลิกเลือกรายชื่อนิสิตจากรายการก่อนเข้าสู่แบบฟอร์ม',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#ea580c',
+                    customClass: {
+                        popup: 'rounded-2xl font-sans',
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-medium'
+                    }
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: '<div class="text-lg sm:text-xl font-bold text-slate-800">ข้อแนะนำก่อนเข้าสู่แบบฟอร์ม</div>',
+                html: `
+                    <div class="text-left text-sm space-y-3 mt-3 text-slate-600">
+                        <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 text-xs text-orange-800 flex items-center gap-2">
+                            <i class="fa-solid fa-user-graduate text-orange-600 text-sm"></i>
+                            <span>นิสิต: <b class="text-slate-800">${selectedStudent.name}</b></span>
+                        </div>
+                        <div class="space-y-2.5">
+                            <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 text-sm">ใช้อีเมลมหาวิทยาลัย</p>
+                                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">กรุณาล็อกอิน Google Form ด้วยอีเมล <span class="text-orange-600 font-bold bg-orange-100/70 px-1.5 py-0.5 rounded">@msu.ac.th</span></p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 text-sm">อีเมลตอบกลับอัตโนมัติ</p>
+                                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">ระบบจะส่งสำเนาคำตอบไปยังอีเมลของท่านทันทีหลังกดส่งข้อมูลเสร็จสิ้น</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 text-sm">แก้ไขข้อมูลได้ตลอดเวลา</p>
+                                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">ท่านสามารถคลิกลิงก์ในอีเมลตอบกลับเพื่อแก้ไขข้อมูลเพิ่มเติมได้ตลอดเวลา</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> รับทราบและเปิดแบบฟอร์ม',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#94a3b8',
+                reverseButtons: true,
+                focusConfirm: true,
+                customClass: {
+                    popup: 'rounded-3xl p-6 font-sans',
+                    confirmButton: 'rounded-xl px-5 py-3 font-medium text-sm shadow-md',
+                    cancelButton: 'rounded-xl px-5 py-3 font-medium text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open(selectedStudent.link, '_blank');
+                    // UI Transition
+                    searchInput.parentElement.classList.add('hidden');
+                    evaluationButton.classList.add('hidden');
+                    confirmationMessage.classList.remove('hidden');
+                }
+            });
         }
 
         function openHelpModal() {
@@ -401,6 +475,7 @@
         });
 
         searchInput.addEventListener('input', showSuggestions);
+        evaluationButton.addEventListener('click', handleEvaluationButtonClick);
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>
     <script src="checkstatus.js"></script>
