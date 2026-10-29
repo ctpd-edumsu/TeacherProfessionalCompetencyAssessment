@@ -133,37 +133,50 @@
 
                 <!-- Input 1: Student ID -->
                 <div>
-                    <label for="studentId" class="block text-sm font-semibold text-slate-700 mb-2">
-                        <i class="fa-solid fa-id-card text-orange-500 mr-1.5"></i>รหัสนิสิต
-                    </label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="studentId" class="block text-sm font-semibold text-slate-700">
+                            <i class="fa-solid fa-id-card text-orange-500 mr-1.5"></i>รหัสนิสิต
+                        </label>
+                        <span id="studentIdCounter" class="text-xs text-slate-400 font-mono font-medium">0/11</span>
+                    </div>
                     <div class="relative">
                         <div
                             class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-user-graduate text-sm"></i>
                         </div>
-                        <input type="text" id="studentId" name="studentId" required autocomplete="off"
+                        <input type="text" id="studentId" name="studentId" required autocomplete="off" inputmode="numeric" maxlength="11"
                             placeholder="กรอกรหัสนิสิต เช่น 6401051xxxx"
-                            class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-base">
+                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-base font-mono tracking-wide">
+                        <div id="studentIdStatusIcon" class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none hidden">
+                        </div>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1.5 ml-1">กรอกรหัสนิสิต 11 หลักที่ใช้ส่งแบบฟอร์ม</p>
+                    <div class="flex items-center justify-between mt-1.5 ml-1">
+                        <p id="studentIdFeedback" class="text-xs text-slate-400">กรอกรหัสนิสิต 11 หลักที่ใช้ส่งแบบฟอร์ม</p>
+                    </div>
                 </div>
 
                 <!-- Input 2: National ID Card Number -->
                 <div>
-                    <label for="citizenId" class="block text-sm font-semibold text-slate-700 mb-2">
-                        <i class="fa-solid fa-shield-halved text-orange-500 mr-1.5"></i>เลขประจำตัวประชาชน
-                    </label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="citizenId" class="block text-sm font-semibold text-slate-700">
+                            <i class="fa-solid fa-shield-halved text-orange-500 mr-1.5"></i>เลขประจำตัวประชาชน
+                        </label>
+                        <span id="citizenIdCounter" class="text-xs text-slate-400 font-mono font-medium">0/13</span>
+                    </div>
                     <div class="relative">
                         <div
                             class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-address-card text-sm"></i>
                         </div>
-                        <input type="text" id="citizenId" name="citizenId" required autocomplete="off"
+                        <input type="text" id="citizenId" name="citizenId" required autocomplete="off" inputmode="numeric" maxlength="13"
                             placeholder="กรอกเลขประจำตัวประชาชน 13 หลัก"
-                            class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-base">
+                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white focus:border-transparent transition-all shadow-sm placeholder-slate-400 text-base font-mono tracking-wide">
+                        <div id="citizenIdStatusIcon" class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none hidden">
+                        </div>
                     </div>
-                    <p class="text-xs text-slate-400 mt-1.5 ml-1">ระบบจะช่วยตัดช่องว่างและเครื่องหมายขีด (-)
-                        ให้อัตโนมัติ</p>
+                    <div class="flex items-center justify-between mt-1.5 ml-1">
+                        <p id="citizenIdFeedback" class="text-xs text-slate-400">กรอกเลขประจำตัวประชาชน 13 หลัก</p>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -289,6 +302,58 @@
          */
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxPPwmJZJc8f80IPj5m2iB-eo4bUWiG5lt6p3mxn-GO3I2T71MdoKcjE-cyZBsf4tKBKg/exec";
 
+        // ==========================================
+        // ฟังก์ชันตรวจจับพิเศษ (Special Detection)
+        // ==========================================
+
+
+
+        /**
+         * ตั้งค่าสไตล์ Real-time ให้ช่อง Input (Default / Valid / Invalid)
+         */
+        function setInputVisualState(inputEl, iconEl, feedbackEl, counterEl, state, message, countText) {
+            // ลบคลาสสไตล์สถานะเดิม
+            inputEl.classList.remove(
+                'border-emerald-500', 'focus:ring-emerald-500', 'bg-emerald-50/20',
+                'border-rose-400', 'focus:ring-rose-400', 'bg-rose-50/20',
+                'border-slate-200', 'focus:ring-orange-500', 'bg-slate-50'
+            );
+            feedbackEl.classList.remove('text-emerald-600', 'text-rose-500', 'text-amber-600', 'text-slate-400');
+            if (counterEl) {
+                counterEl.classList.remove('text-emerald-600', 'text-rose-500', 'text-amber-600', 'text-slate-400');
+            }
+
+            if (state === 'valid') {
+                inputEl.classList.add('border-emerald-500', 'focus:ring-emerald-500', 'bg-emerald-50/20');
+                feedbackEl.classList.add('text-emerald-600');
+                if (counterEl) counterEl.classList.add('text-emerald-600');
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>';
+                iconEl.classList.remove('hidden');
+            } else if (state === 'invalid') {
+                inputEl.classList.add('border-rose-400', 'focus:ring-rose-400', 'bg-rose-50/20');
+                feedbackEl.classList.add('text-rose-500');
+                if (counterEl) counterEl.classList.add('text-rose-500');
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500 text-sm"></i>';
+                iconEl.classList.remove('hidden');
+            } else if (state === 'typing') {
+                inputEl.classList.add('border-slate-200', 'focus:ring-orange-500', 'bg-slate-50');
+                feedbackEl.classList.add('text-amber-600');
+                if (counterEl) counterEl.classList.add('text-amber-600');
+                iconEl.classList.add('hidden');
+            } else {
+                // Default / Empty
+                inputEl.classList.add('border-slate-200', 'focus:ring-orange-500', 'bg-slate-50');
+                feedbackEl.classList.add('text-slate-400');
+                if (counterEl) counterEl.classList.add('text-slate-400');
+                iconEl.classList.add('hidden');
+            }
+
+            feedbackEl.textContent = message;
+            if (counterEl && countText !== undefined) {
+                counterEl.textContent = countText;
+            }
+        }
+
         function openHelpModal() {
             document.getElementById('helpModal').classList.remove('hidden');
         }
@@ -300,6 +365,83 @@
         // Close modal on escape key
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') closeHelpModal();
+        });
+
+        // ==========================================
+        // การเชื่อมต่อ Event Listeners สำหรับ Real-time Detection
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const studentIdInput = document.getElementById('studentId');
+            const studentIdIcon = document.getElementById('studentIdStatusIcon');
+            const studentIdFeedback = document.getElementById('studentIdFeedback');
+            const studentIdCounter = document.getElementById('studentIdCounter');
+
+            const citizenIdInput = document.getElementById('citizenId');
+            const citizenIdIcon = document.getElementById('citizenIdStatusIcon');
+            const citizenIdFeedback = document.getElementById('citizenIdFeedback');
+            const citizenIdCounter = document.getElementById('citizenIdCounter');
+
+            // --- 1. รหัสนิสิต (Student ID) Event Handlers ---
+            function updateStudentIdUI(isBlur = false) {
+                // กรองเฉพาะตัวเลข
+                const raw = studentIdInput.value.replace(/\D/g, '').slice(0, 11);
+                if (studentIdInput.value !== raw) {
+                    studentIdInput.value = raw;
+                }
+
+                const len = raw.length;
+                const countText = `${len}/11`;
+
+                if (len === 0) {
+                    setInputVisualState(studentIdInput, studentIdIcon, studentIdFeedback, studentIdCounter, 
+                        'default', 'กรอกรหัสนิสิต 11 หลักที่ใช้ส่งแบบฟอร์ม', countText);
+                } else if (len === 11) {
+                    setInputVisualState(studentIdInput, studentIdIcon, studentIdFeedback, studentIdCounter, 
+                        'valid', 'รหัสนิสิตครบ 11 หลักเรียบร้อย', countText);
+                } else {
+                    if (isBlur) {
+                        setInputVisualState(studentIdInput, studentIdIcon, studentIdFeedback, studentIdCounter, 
+                            'invalid', `รหัสนิสิตไม่ครบ 11 หลัก (กรอกไป ${len} หลัก)`, countText);
+                    } else {
+                        setInputVisualState(studentIdInput, studentIdIcon, studentIdFeedback, studentIdCounter, 
+                            'typing', `กำลังกรอก ${len}/11 หลัก (ต้องครบ 11 หลัก)`, countText);
+                    }
+                }
+            }
+
+            studentIdInput.addEventListener('input', () => updateStudentIdUI(false));
+            studentIdInput.addEventListener('blur', () => updateStudentIdUI(true));
+
+            // --- 2. เลขประจำตัวประชาชน (Citizen ID) Event Handlers ---
+            function updateCitizenIdUI(isBlur = false) {
+                // กรองเฉพาะตัวเลข สูงสุด 13 ตัว (ไม่ใส่ขีด)
+                const raw = citizenIdInput.value.replace(/\D/g, '').slice(0, 13);
+                if (citizenIdInput.value !== raw) {
+                    citizenIdInput.value = raw;
+                }
+
+                const len = raw.length;
+                const countText = `${len}/13`;
+
+                if (len === 0) {
+                    setInputVisualState(citizenIdInput, citizenIdIcon, citizenIdFeedback, citizenIdCounter, 
+                        'default', 'กรอกเลขประจำตัวประชาชน 13 หลัก', countText);
+                } else if (len === 13) {
+                    setInputVisualState(citizenIdInput, citizenIdIcon, citizenIdFeedback, citizenIdCounter, 
+                        'valid', 'เลขประจำตัวประชาชนครบ 13 หลักเรียบร้อย', countText);
+                } else {
+                    if (isBlur) {
+                        setInputVisualState(citizenIdInput, citizenIdIcon, citizenIdFeedback, citizenIdCounter, 
+                            'invalid', `เลขบัตรประชาชนไม่ครบ 13 หลัก (กรอกไป ${len} หลัก)`, countText);
+                    } else {
+                        setInputVisualState(citizenIdInput, citizenIdIcon, citizenIdFeedback, citizenIdCounter, 
+                            'typing', `กำลังกรอก ${len}/13 หลัก (ต้องครบ 13 หลัก)`, countText);
+                    }
+                }
+            }
+
+            citizenIdInput.addEventListener('input', () => updateCitizenIdUI(false));
+            citizenIdInput.addEventListener('blur', () => updateCitizenIdUI(true));
         });
 
         async function handleVerification(event) {
@@ -316,20 +458,47 @@
             const cleanStudentId = studentIdInput.value.trim().replace(/[-\s]/g, '');
             const cleanCitizenId = citizenIdInput.value.trim().replace(/[-\s]/g, '');
 
-            if (!cleanStudentId || !cleanCitizenId) {
+            // ตรวจสอบความถูกต้องของรหัสนิสิต (ต้องมี 11 หลัก)
+            if (cleanStudentId.length !== 11) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'กรุณากรอกข้อมูลให้ครบถ้วน',
-                    text: 'กรุณากรอกทั้งรหัสนิสิตและเลขประจำตัวประชาชน',
-                    confirmButtonText: 'ตกลง',
+                    title: 'รหัสนิสิตไม่ถูกต้อง',
+                    text: cleanStudentId.length === 0 
+                        ? 'กรุณากรอกรหัสนิสิต 11 หลัก' 
+                        : `รหัสนิสิตต้องมี 11 หลักพอดี (ท่านกรอก ${cleanStudentId.length} หลัก)`,
+                    confirmButtonText: 'แก้ไขข้อมูล',
                     confirmButtonColor: '#ea580c',
                     customClass: {
                         popup: 'rounded-2xl font-sans',
                         confirmButton: 'rounded-xl px-5 py-2.5 font-medium'
                     }
+                }).then(() => {
+                    studentIdInput.focus();
                 });
                 return;
             }
+
+            // ตรวจสอบความถูกต้องของเลขประจำตัวประชาชน (ต้องมี 13 หลัก)
+            if (cleanCitizenId.length !== 13) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'เลขบัตรประชาชนไม่ครบ 13 หลัก',
+                    text: cleanCitizenId.length === 0 
+                        ? 'กรุณากรอกเลขประจำตัวประชาชน 13 หลัก' 
+                        : `เลขประจำตัวประชาชนต้องมี 13 หลักพอดี (ท่านกรอก ${cleanCitizenId.length} หลัก)`,
+                    confirmButtonText: 'แก้ไขข้อมูล',
+                    confirmButtonColor: '#ea580c',
+                    customClass: {
+                        popup: 'rounded-2xl font-sans',
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-medium'
+                    }
+                }).then(() => {
+                    citizenIdInput.focus();
+                });
+                return;
+            }
+
+
 
             // ตรวจสอบว่าผู้ใช้ใส่ Web App URL จริงหรือยัง
             if (WEB_APP_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL" || !WEB_APP_URL.startsWith('http')) {
