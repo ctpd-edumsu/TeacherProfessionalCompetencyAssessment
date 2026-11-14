@@ -401,3 +401,509 @@ function updateCtpdSettings(academicYear, deadlineDate, userDepartment) {
 }
 
 // --- สิ้นสุดฟังก์ชันใหม่ ---
+
+// --- ฟังก์ชันจัดการฐานข้อมูลรายชื่อนิสิต (Student Roster CRUD & Import) ---
+// Google Sheet สำหรับเก็บรายชื่อนิสิต
+const STUDENT_ROSTER_SPREADSHEET_ID = '1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs';
+const STUDENT_ROSTER_SHEET_NAME = 'Sheet1';
+
+/**
+ * ดึงข้อมูลรายชื่อนิสิตจาก Sheet1 พร้อมนับจำนวนการประเมินจาก Form Responses 1
+ * @param {string} token - Session Token
+ * @param {string} department - สาขาวิชาของผู้ใช้
+ * @return {object} { success, students[], allDepartments[] }
+ */
+function getStudentRoster(token, department) {
+  if (!validateToken(token)) {
+    return { success: false, error: "การยืนยันตัวตนล้มเหลว Token ไม่ถูกต้อง" };
+  }
+  if (!department || typeof department !== 'string') {
+    return { success: false, error: "ไม่พบข้อมูลสิทธิ์สาขาวิชา" };
+  }
+
+  const userDeptAccess = department.trim().toLowerCase();
+
+  try {
+    const ss = SpreadsheetApp.openById(STUDENT_ROSTER_SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(STUDENT_ROSTER_SHEET_NAME);
+    if (!sheet) {
+      return { success: false, error: 'ไม่พบชีท "' + STUDENT_ROSTER_SHEET_NAME + '"' };
+    }
+
+    const allData = sheet.getDataRange().getDisplayValues();
+    if (allData.length <= 1) {
+      return { success: true, students: [], allDepartments: [] };
+    }
+
+    // นับจำนวนการประเมินจาก Form Responses 1
+    var evalCountMap = {};
+    try {
+      var activeSS = SpreadsheetApp.getActiveSpreadsheet();
+      var formSheet = activeSS.getSheetByName('Form Responses 1');
+      if (formSheet) {
+        var formData = formSheet.getDataRange().getDisplayValues();
+        for (var fi = 1; fi < formData.length; fi++) {
+          var fRow = formData[fi];
+          if (fRow.length >= 6) {
+            var evalKey = (fRow[4] || '').trim().toLowerCase() + '|' + (fRow[5] || '').trim().toLowerCase();
+            if (evalKey !== '|') {
+              evalCountMap[evalKey] = (evalCountMap[evalKey] || 0) + 1;
+            }
+          }
+        }
+      }
+    } catch (evalErr) {
+      Logger.log('Warning: ไม่สามารถนับจำนวนการประเมินได้: ' + evalErr.toString());
+    }
+
+    var deptSet = {};
+    var students = [];
+
+    for (var i = 1; i < allData.length; i++) {
+      var row = allData[i];
+      var prefix = (row[0] || '').trim();
+      var firstName = (row[1] || '').trim();
+      var lastName = (row[2] || '').trim();
+      // row[3] = D = ARRAYFORMULA (คำนำหน้าชื่อ-นามสกุล) - ข้ามไป
+      var major = (row[4] || '').trim(); // E = สาขาวิชา
+
+      // ข้ามแถวว่าง
+      if (!firstName && !lastName) continue;
+
+      if (major) {
+        deptSet[major] = true;
+      }
+
+      // กรองตามสาขาวิชา
+      if (userDeptAccess !== 'all' && major.toLowerCase() !== userDeptAccess) {
+        continue;
+      }
+
+      var evalKey = firstName.toLowerCase() + '|' + lastName.toLowerCase();
+      var evalCount = evalCountMap[evalKey] || 0;
+
+      students.push({
+        sheetRow: i + 1,
+        prefix: prefix,
+        firstName: firstName,
+        lastName: lastName,
+        fullName: (row[3] || '').trim(),
+        major: major,
+        evalCount: evalCount
+      });
+    }
+
+    var allDepartments = Object.keys(deptSet).sort(function(a, b) {
+      return a.localeCompare(b, 'th');
+    });
+
+    Logger.log('getStudentRoster: คืนค่า ' + students.length + ' รายชื่อ, ' + allDepartments.length + ' สาขาวิชา');
+    return { success: true, students: students, allDepartments: allDepartments };
+  } catch (e) {
+    console.error('เกิดข้อผิดพลาดใน getStudentRoster: ' + e.toString());
+    return { success: false, error: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายชื่อนิสิต: ' + e.message };
+  }
+}
+
+/**
+ * เพิ่มหรือแก้ไขข้อมูลนิสิตรายคนใน Sheet1
+ * @param {string} token - Session Token
+ * @param {string} department - สาขาวิชาของผู้ใช้
+ * @param {object} studentData - { rowNumber (optional), prefix, firstName, lastName, major }
+ * @return {object} { success, message, student }
+ */
+function saveStudentData(token, department, studentData) {
+  if (!validateToken(token)) {
+    return { success: false, error: "การยืนยันตัวตนล้มเหลว Token ไม่ถูกต้อง" };
+  }
+  if (!department || typeof department !== 'string') {
+    return { success: false, error: "ไม่พบข้อมูลสิทธิ์สาขาวิชา" };
+  }
+  if (!studentData || !studentData.firstName || !studentData.lastName) {
+    return { success: false, error: "กรุณาระบุชื่อและนามสกุลของนิสิต" };
+  }
+
+  var userDeptAccess = department.trim().toLowerCase();
+
+  try {
+    var ss = SpreadsheetApp.openById(STUDENT_ROSTER_SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(STUDENT_ROSTER_SHEET_NAME);
+    if (!sheet) {
+      return { success: false, error: 'ไม่พบชีท "' + STUDENT_ROSTER_SHEET_NAME + '"' };
+    }
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+
+    var prefix = String(studentData.prefix || '').trim();
+    var firstName = String(studentData.firstName).trim();
+    var lastName = String(studentData.lastName).trim();
+    var major = String(studentData.major || '').trim();
+
+    // บังคับสาขาวิชาของผู้ใช้ (หากไม่ใช่ admin)
+    if (userDeptAccess !== 'all' && major.toLowerCase() !== userDeptAccess) {
+      major = department.trim(); // บังคับใช้สาขาวิชาของตนเอง
+    }
+
+    var rowNum = studentData.rowNumber ? parseInt(studentData.rowNumber, 10) : null;
+
+    if (rowNum && rowNum >= 2) {
+      // แก้ไขข้อมูลเดิม
+      var maxRow = sheet.getLastRow();
+      if (rowNum > maxRow) {
+        lock.releaseLock();
+        return { success: false, error: 'แถวที่ ' + rowNum + ' ไม่มีอยู่ในชีท' };
+      }
+
+      // ตรวจสอบสิทธิ์ระดับสาขา
+      if (userDeptAccess !== 'all') {
+        var existingMajor = String(sheet.getRange(rowNum, 5).getValue()).trim().toLowerCase();
+        if (existingMajor !== userDeptAccess) {
+          lock.releaseLock();
+          return { success: false, error: 'คุณไม่มีสิทธิ์แก้ไขนิสิตในสาขาวิชานี้' };
+        }
+      }
+
+      sheet.getRange(rowNum, 1).setValue(prefix);   // A = คำนำหน้า
+      sheet.getRange(rowNum, 2).setValue(firstName); // B = ชื่อ
+      sheet.getRange(rowNum, 3).setValue(lastName);  // C = นามสกุล
+      // D ข้ามไป (ARRAYFORMULA)
+      sheet.getRange(rowNum, 5).setValue(major);     // E = สาขาวิชา
+
+      lock.releaseLock();
+      Logger.log('saveStudentData: แก้ไขข้อมูลแถวที่ ' + rowNum + ' สำเร็จ');
+      return {
+        success: true,
+        message: 'แก้ไขข้อมูลนิสิต "' + firstName + ' ' + lastName + '" สำเร็จ',
+        student: { sheetRow: rowNum, prefix: prefix, firstName: firstName, lastName: lastName, major: major }
+      };
+    } else {
+      // เพิ่มข้อมูลใหม่ - หาแถวว่างถัดไปโดยดูคอลัมน์ A, B, C
+      var lastRow = sheet.getLastRow();
+      var newRow = lastRow + 1;
+
+      // หาแถวว่างที่อาจอยู่ระหว่างกลาง (เซลล์ A ว่าง)
+      if (lastRow >= 2) {
+        var colA = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        for (var idx = 0; idx < colA.length; idx++) {
+          if (!colA[idx][0] || String(colA[idx][0]).trim() === '') {
+            newRow = idx + 2;
+            break;
+          }
+        }
+      }
+
+      sheet.getRange(newRow, 1).setValue(prefix);   // A
+      sheet.getRange(newRow, 2).setValue(firstName); // B
+      sheet.getRange(newRow, 3).setValue(lastName);  // C
+      // D ข้ามไป (ARRAYFORMULA)
+      sheet.getRange(newRow, 5).setValue(major);     // E
+
+      lock.releaseLock();
+      Logger.log('saveStudentData: เพิ่มนิสิตใหม่ที่แถว ' + newRow + ' สำเร็จ');
+      return {
+        success: true,
+        message: 'เพิ่มนิสิต "' + firstName + ' ' + lastName + '" สำเร็จ',
+        student: { sheetRow: newRow, prefix: prefix, firstName: firstName, lastName: lastName, major: major }
+      };
+    }
+  } catch (e) {
+    console.error('เกิดข้อผิดพลาดใน saveStudentData: ' + e.toString());
+    return { success: false, error: 'เกิดข้อผิดพลาดในการบันทึกข้อมูลนิสิต: ' + e.message };
+  }
+}
+
+/**
+ * ลบข้อมูลนิสิตเฉพาะเซลล์ A, B, C, E แล้วเลื่อนขึ้น (ไม่ลบทั้งแถว เพื่อรักษา ARRAYFORMULA)
+ * @param {string} token - Session Token
+ * @param {string} department - สาขาวิชาของผู้ใช้
+ * @param {number} rowNumber - หมายเลขแถวที่ต้องการลบ
+ * @return {object} { success, message }
+ */
+function deleteStudentCells(token, department, rowNumber) {
+  if (!validateToken(token)) {
+    return { success: false, error: "การยืนยันตัวตนล้มเหลว Token ไม่ถูกต้อง" };
+  }
+  if (!department || typeof department !== 'string') {
+    return { success: false, error: "ไม่พบข้อมูลสิทธิ์สาขาวิชา" };
+  }
+
+  var userDeptAccess = department.trim().toLowerCase();
+  var r = parseInt(rowNumber, 10);
+  if (isNaN(r) || r < 2) {
+    return { success: false, error: "หมายเลขแถวไม่ถูกต้อง" };
+  }
+
+  try {
+    var ss = SpreadsheetApp.openById(STUDENT_ROSTER_SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(STUDENT_ROSTER_SHEET_NAME);
+    if (!sheet) {
+      return { success: false, error: 'ไม่พบชีท "' + STUDENT_ROSTER_SHEET_NAME + '"' };
+    }
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+
+    var maxRow = sheet.getLastRow();
+    if (r > maxRow) {
+      lock.releaseLock();
+      return { success: false, error: 'แถวที่ ' + r + ' ไม่มีอยู่ในชีท' };
+    }
+
+    // ตรวจสอบสิทธิ์สาขาวิชา
+    if (userDeptAccess !== 'all') {
+      var existingMajor = String(sheet.getRange(r, 5).getValue()).trim().toLowerCase();
+      if (existingMajor !== userDeptAccess) {
+        lock.releaseLock();
+        return { success: false, error: 'คุณไม่มีสิทธิ์ลบนิสิตในสาขาวิชานี้' };
+      }
+    }
+
+    var deletedName = String(sheet.getRange(r, 2).getValue()).trim() + ' ' + String(sheet.getRange(r, 3).getValue()).trim();
+
+    // ลบเฉพาะเซลล์ A, B, C (คอลัมน์ 1-3) แล้วเลื่อนขึ้น
+    sheet.getRange(r, 1, 1, 3).deleteCells(SpreadsheetApp.Dimension.ROWS);
+    // ลบเฉพาะเซลล์ E (คอลัมน์ 5) แล้วเลื่อนขึ้น
+    // หลังจากลบ A,B,C ไปแล้ว ตำแหน่งของ E ยังอยู่ที่คอลัมน์ 5 แถวเดิม (เพราะ deleteCells ทำที่ A,B,C เลื่อนเฉพาะ 3 คอลัมน์นั้น)
+    sheet.getRange(r, 5, 1, 1).deleteCells(SpreadsheetApp.Dimension.ROWS);
+
+    lock.releaseLock();
+    Logger.log('deleteStudentCells: ลบข้อมูลนิสิต "' + deletedName + '" ที่แถว ' + r + ' สำเร็จ (เฉพาะ A,B,C,E shift up)');
+    return {
+      success: true,
+      message: 'ลบข้อมูลนิสิต "' + deletedName.trim() + '" สำเร็จ'
+    };
+  } catch (e) {
+    console.error('เกิดข้อผิดพลาดใน deleteStudentCells: ' + e.toString());
+    return { success: false, error: 'เกิดข้อผิดพลาดในการลบข้อมูลนิสิต: ' + e.message };
+  }
+}
+
+/**
+ * นำเข้ารายชื่อนิสิตจำนวนมาก (Batch Import) ลงใน Sheet1
+ * @param {string} token - Session Token
+ * @param {string} department - สาขาวิชาของผู้ใช้
+ * @param {Array} studentsList - [{prefix, firstName, lastName, major}]
+ * @param {string} duplicateMode - 'skip' | 'overwrite' | 'append'
+ * @return {object} { success, importedCount, skippedCount, updatedCount, message }
+ */
+function batchImportStudents(token, department, studentsList, duplicateMode) {
+  if (!validateToken(token)) {
+    return { success: false, error: "การยืนยันตัวตนล้มเหลว Token ไม่ถูกต้อง" };
+  }
+  if (!department || typeof department !== 'string') {
+    return { success: false, error: "ไม่พบข้อมูลสิทธิ์สาขาวิชา" };
+  }
+  if (!Array.isArray(studentsList) || studentsList.length === 0) {
+    return { success: false, error: "ไม่มีรายชื่อนิสิตสำหรับนำเข้า" };
+  }
+
+  var userDeptAccess = department.trim().toLowerCase();
+  var mode = (duplicateMode || 'skip').toLowerCase();
+
+  try {
+    var ss = SpreadsheetApp.openById(STUDENT_ROSTER_SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(STUDENT_ROSTER_SHEET_NAME);
+    if (!sheet) {
+      return { success: false, error: 'ไม่พบชีท "' + STUDENT_ROSTER_SHEET_NAME + '"' };
+    }
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+
+    // อ่านข้อมูลปัจจุบันทั้งหมดเพื่อตรวจสอบชื่อซ้ำ
+    var existingData = sheet.getDataRange().getDisplayValues();
+    var existingMap = {};
+    for (var i = 1; i < existingData.length; i++) {
+      var eRow = existingData[i];
+      var eFirst = (eRow[1] || '').trim().toLowerCase();
+      var eLast = (eRow[2] || '').trim().toLowerCase();
+      if (eFirst || eLast) {
+        existingMap[eFirst + '|' + eLast] = i + 1; // เก็บ row number
+      }
+    }
+
+    var importedCount = 0;
+    var skippedCount = 0;
+    var updatedCount = 0;
+    var newRows = [];
+
+    for (var j = 0; j < studentsList.length; j++) {
+      var st = studentsList[j];
+      var prefix = String(st.prefix || '').trim();
+      var firstName = String(st.firstName || '').trim();
+      var lastName = String(st.lastName || '').trim();
+      var major = String(st.major || '').trim();
+
+      if (!firstName && !lastName) {
+        skippedCount++;
+        continue;
+      }
+
+      // บังคับสาขาวิชาของผู้ใช้ (หากไม่ใช่ admin)
+      if (userDeptAccess !== 'all' && major) {
+        if (major.toLowerCase() !== userDeptAccess) {
+          major = department.trim();
+        }
+      } else if (userDeptAccess !== 'all' && !major) {
+        major = department.trim();
+      }
+
+      var dupKey = firstName.toLowerCase() + '|' + lastName.toLowerCase();
+      var existingRow = existingMap[dupKey];
+
+      if (existingRow) {
+        if (mode === 'skip') {
+          skippedCount++;
+          continue;
+        } else if (mode === 'overwrite') {
+          // อัปเดตแถวเดิม
+          sheet.getRange(existingRow, 1).setValue(prefix);
+          sheet.getRange(existingRow, 2).setValue(firstName);
+          sheet.getRange(existingRow, 3).setValue(lastName);
+          sheet.getRange(existingRow, 5).setValue(major);
+          updatedCount++;
+          continue;
+        }
+        // mode === 'append' → ไม่ต้องเช็คซ้ำ ใส่ต่อท้ายเลย
+      }
+
+      newRows.push({
+        prefix: prefix,
+        firstName: firstName,
+        lastName: lastName,
+        major: major
+      });
+      importedCount++;
+    }
+
+    // เขียนข้อมูลใหม่ทั้งหมดแบบ Batch (2 API calls แทนการวนลูปทีละเซลล์)
+    if (newRows.length > 0) {
+      // หาแถวว่างเริ่มต้น
+      var lastRow = sheet.getLastRow();
+      var startRow = lastRow + 1;
+
+      // หาแถวว่างที่อาจอยู่ระหว่างกลาง (เซลล์ A ว่าง)
+      if (lastRow >= 2) {
+        var colA = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        for (var idx = 0; idx < colA.length; idx++) {
+          if (!colA[idx][0] || String(colA[idx][0]).trim() === '') {
+            startRow = idx + 2;
+            break;
+          }
+        }
+      }
+
+      var batchABC = [];
+      var batchE = [];
+      for (var k = 0; k < newRows.length; k++) {
+        batchABC.push([newRows[k].prefix, newRows[k].firstName, newRows[k].lastName]);
+        batchE.push([newRows[k].major]);
+      }
+
+      // เขียน A:C (คำนำหน้า, ชื่อ, นามสกุล) - ข้ามคอลัมน์ D (ARRAYFORMULA)
+      sheet.getRange(startRow, 1, batchABC.length, 3).setValues(batchABC);
+      // เขียน E (สาขาวิชา)
+      sheet.getRange(startRow, 5, batchE.length, 1).setValues(batchE);
+    }
+
+    lock.releaseLock();
+    var msg = 'นำเข้าสำเร็จ ' + importedCount + ' รายการ';
+    if (updatedCount > 0) msg += ', อัปเดตทับ ' + updatedCount + ' รายการ';
+    if (skippedCount > 0) msg += ', ข้าม ' + skippedCount + ' รายการ';
+
+    Logger.log('batchImportStudents: ' + msg);
+    return {
+      success: true,
+      importedCount: importedCount,
+      skippedCount: skippedCount,
+      updatedCount: updatedCount,
+      message: msg
+    };
+  } catch (e) {
+    console.error('เกิดข้อผิดพลาดใน batchImportStudents: ' + e.toString());
+    return { success: false, error: 'เกิดข้อผิดพลาดในการนำเข้ารายชื่อนิสิต: ' + e.message };
+  }
+}
+
+// --- ฟังก์ชันสำหรับการค้นหาและแก้ไขชื่อ-นามสกุลนิสิต (Batch Student Name Editor) ---
+
+/**
+ * อัปเดตคำนำหน้า ชื่อ หรือนามสกุลของนิสิตในหลายแถวพร้อมกันใน Google Sheet
+ * @param {string} token - Session Token สำหรับยืนยันสิทธิ์
+ * @param {string} department - สาขาวิชาของผู้ใช้
+ * @param {Array<number>} sheetRowNumbers - รายการหมายเลขแถวในชีทที่ต้องการอัปเดต
+ * @param {string} newPrefix - คำนำหน้าใหม่ (หากไม่ต้องการเปลี่ยนให้ส่งค่าว่าง)
+ * @param {string} newName - ชื่อใหม่ (หากไม่ต้องการเปลี่ยนให้ส่งค่าว่าง)
+ * @param {string} newSurname - นามสกุลใหม่ (หากไม่ต้องการเปลี่ยนให้ส่งค่าว่าง)
+ * @return {object} { success: boolean, updatedCount: number, message/error: string }
+ */
+function batchUpdateStudentNames(token, department, sheetRowNumbers, newPrefix, newName, newSurname) {
+  if (!validateToken(token)) {
+    return { success: false, error: "การยืนยันตัวตนล้มเหลว Token ไม่ถูกต้อง" };
+  }
+
+  if (!department || typeof department !== 'string') {
+    return { success: false, error: "ไม่พบข้อมูลสิทธิ์สาขาวิชาของผู้ใช้งาน" };
+  }
+
+  if (!Array.isArray(sheetRowNumbers) || sheetRowNumbers.length === 0) {
+    return { success: false, error: "ไม่มีรายการแถวที่ต้องการอัปเดต" };
+  }
+
+  const userDepartmentAccess = department.trim().toLowerCase();
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Form Responses 1');
+    if (!sheet) {
+      return { success: false, error: 'ไม่พบชีทข้อมูล "Form Responses 1"' };
+    }
+
+    const lock = LockService.getScriptLock();
+    // รอ Lock สูงสุด 15 วินาที เพื่อความปลอดภัยเมื่อมีการบันทึกพร้อมกัน
+    lock.waitLock(15000);
+
+    let updatedCount = 0;
+    const maxRow = sheet.getLastRow();
+
+    sheetRowNumbers.forEach(function(rowNum) {
+      const r = parseInt(rowNum, 10);
+      if (isNaN(r) || r < 2 || r > maxRow) return;
+
+      // ตรวจสอบสิทธิ์ระดับสาขาวิชา
+      if (userDepartmentAccess !== 'all') {
+        const majorVal = sheet.getRange(r, 7).getValue();
+        if (String(majorVal).trim().toLowerCase() !== userDepartmentAccess) {
+          return; // ข้ามแถวที่ไม่อยู่ในสาขาวิชาที่ผู้ใช้มีสิทธิ์
+        }
+      }
+
+      // คอลัมน์ 4 (D) = คำนำหน้า
+      if (newPrefix && String(newPrefix).trim() !== '') {
+        sheet.getRange(r, 4).setValue(String(newPrefix).trim());
+      }
+      // คอลัมน์ 5 (E) = ชื่อ
+      if (newName && String(newName).trim() !== '') {
+        sheet.getRange(r, 5).setValue(String(newName).trim());
+      }
+      // คอลัมน์ 6 (F) = นามสกุล
+      if (newSurname && String(newSurname).trim() !== '') {
+        sheet.getRange(r, 6).setValue(String(newSurname).trim());
+      }
+
+      updatedCount++;
+    });
+
+    lock.releaseLock();
+    Logger.log(`batchUpdateStudentNames: อัปเดตข้อมูลนิสิตสำเร็จ ${updatedCount} แถว`);
+    return {
+      success: true,
+      updatedCount: updatedCount,
+      message: `อัปเดตข้อมูลชื่อ-นามสกุลนิสิตสำเร็จ ${updatedCount} รายการ`
+    };
+  } catch (e) {
+    console.error("เกิดข้อผิดพลาดใน batchUpdateStudentNames: " + e.toString());
+    return { success: false, error: "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + e.message };
+  }
+}

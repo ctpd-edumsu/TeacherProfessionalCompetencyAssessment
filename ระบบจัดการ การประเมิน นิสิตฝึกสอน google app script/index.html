@@ -15,6 +15,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SheetJS for Excel Import -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -221,8 +223,31 @@
             </div>
         </header>
 
+        <!-- ========================================== -->
+        <!-- NAVIGATION TABS (ข้อมูลการประเมิน / จัดการรายชื่อนิสิต) -->
+        <!-- ========================================== -->
+        <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-4 sm:pt-6">
+            <div class="bg-white rounded-2xl border border-slate-200 p-1.5 flex gap-1.5 shadow-xs">
+                <button type="button" id="tabBtnEval" onclick="switchMainTab('eval')"
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 bg-orange-500 text-white shadow-md">
+                    <i class="fa-solid fa-chart-bar text-xs"></i>
+                    <span>ข้อมูลผลการประเมิน</span>
+                    <span id="tabBadgeEval" class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/25 text-white">0</span>
+                </button>
+                <button type="button" id="tabBtnRoster" onclick="switchMainTab('roster')"
+                    class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 bg-transparent text-slate-500 hover:bg-slate-50">
+                    <i class="fa-solid fa-users text-xs"></i>
+                    <span>จัดการรายชื่อนิสิต</span>
+                    <span id="tabBadgeRoster" class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">0</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Main Body Container -->
         <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex-grow space-y-6">
+
+            <!-- ==================== EVAL VIEW (แท็บข้อมูลผลการประเมิน) ==================== -->
+            <div id="evalView">
 
             <!-- ========================================== -->
             <!-- 2.1 ADMIN CONTROLS HUB (Only for 'all') -->
@@ -442,8 +467,13 @@
                                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-user text-xs"></i>
                             </div>
-                            <input id="nameSearch" type="text" placeholder="พิมพ์ชื่อนิสิต..."
-                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                            <input id="nameSearch" type="text" placeholder="พิมพ์ชื่อนิสิต..." autocomplete="off"
+                                class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                            <button type="button" id="clearNameSearchBtn" onclick="clearFilterField('nameSearch')"
+                                title="ล้างคำค้นหาชื่อ"
+                                class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                <i class="fa-solid fa-circle-xmark text-xs"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -456,8 +486,13 @@
                                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-signature text-xs"></i>
                             </div>
-                            <input id="surnameSearch" type="text" placeholder="พิมพ์นามสกุล..."
-                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                            <input id="surnameSearch" type="text" placeholder="พิมพ์นามสกุล..." autocomplete="off"
+                                class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                            <button type="button" id="clearSurnameSearchBtn" onclick="clearFilterField('surnameSearch')"
+                                title="ล้างคำค้นหานามสกุล"
+                                class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                <i class="fa-solid fa-circle-xmark text-xs"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -499,9 +534,15 @@
                         <i class="fa-solid fa-lightbulb text-amber-500"></i>
                         <span>พิมพ์ในช่องค้นหาหรือเปลี่ยนตัวกรอง ข้อมูลจะอัปเดตอัตโนมัติแบบเรียลไทม์</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- ปุ่มเปิดเครื่องมือค้นหาและแก้ไขชื่อ-นามสกุลนิสิต (Student Name Manager) -->
+                        <button type="button" onclick="openBatchNameModal()"
+                            class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:from-orange-700 active:to-amber-700 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-user-pen"></i>
+                            <span>แก้ไขชื่อ-นามสกุลนิสิต</span>
+                        </button>
                         <button onclick="deleteInvalidRows()" id="deleteInvalidButton"
-                            class="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white text-xs font-medium px-4 py-2 rounded-xl shadow-xs transition-all"
+                            class="inline-flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-xs transition-all"
                             hidden>
                             <i class="fa-solid fa-trash-can"></i>
                             <span>ลบการประเมินที่ไม่เอาทั้งหมด</span>
@@ -581,6 +622,128 @@
                 <h4 class="text-base font-bold text-slate-700">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</h4>
                 <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาชื่อ หรือปรับตัวกรองผู้ประเมิน</p>
             </div>
+
+            </div><!-- /evalView -->
+
+            <!-- ==================== ROSTER VIEW (แท็บจัดการรายชื่อนิสิต) ==================== -->
+            <div id="rosterView" class="hidden space-y-6">
+
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs text-center">
+                        <p class="text-xs text-slate-500 font-medium mb-1">รายชื่อทั้งหมด</p>
+                        <p id="rosterStatTotal" class="text-2xl font-bold text-slate-800">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs text-center">
+                        <p class="text-xs text-slate-500 font-medium mb-1">กรองผลแล้ว</p>
+                        <p id="rosterStatFiltered" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs text-center col-span-2 sm:col-span-1">
+                        <p class="text-xs text-slate-500 font-medium mb-1">สาขาวิชาในระบบ</p>
+                        <p id="rosterStatDepts" class="text-2xl font-bold text-amber-600">0</p>
+                    </div>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                        <h3 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-orange-500"></i>
+                            <span>ฐานข้อมูลรายชื่อนิสิตฝึกสอน</span>
+                        </h3>
+                        <button type="button" onclick="loadStudentRoster()"
+                            class="text-xs text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>รีเฟรช</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                        <!-- Search Name -->
+                        <div>
+                            <label for="rosterSearchName" class="block text-xs font-medium text-slate-600 mb-1">ค้นหาชื่อ/นามสกุล</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                </div>
+                                <input id="rosterSearchName" type="text" placeholder="พิมพ์ชื่อหรือนามสกุล..." autocomplete="off"
+                                    class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-sm placeholder-slate-400">
+                                <button type="button" id="clearRosterSearchBtn" onclick="document.getElementById('rosterSearchName').value='';this.classList.add('hidden');renderRosterTable();"
+                                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Filter Department (admin only) -->
+                        <div id="rosterDeptFilterWrap">
+                            <label for="rosterDeptFilter" class="block text-xs font-medium text-slate-600 mb-1">กรองสาขาวิชา</label>
+                            <select id="rosterDeptFilter"
+                                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all text-sm">
+                                <option value="">ทุกสาขาวิชา</option>
+                            </select>
+                        </div>
+                        <!-- Action Buttons -->
+                        <div class="sm:col-span-2 lg:col-span-2 flex flex-wrap items-end gap-2">
+                            <button type="button" onclick="openStudentFormModal(null)"
+                                class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span>เพิ่มนิสิต</span>
+                            </button>
+                            <button type="button" onclick="openBatchImportModal()"
+                                class="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95">
+                                <i class="fa-solid fa-file-import"></i>
+                                <span>นำเข้ารายชื่อ</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Table -->
+                <div class="hidden md:block bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-4 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-table-list text-orange-500"></i>
+                            <span>ตารางรายชื่อนิสิต</span>
+                        </span>
+                    </div>
+                    <div class="table-container">
+                        <table id="rosterTable" class="w-full text-sm text-left">
+                            <thead class="bg-slate-100/90 text-slate-700 text-xs font-semibold sticky top-0 z-10 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3 w-12">#</th>
+                                    <th class="p-3">คำนำหน้า</th>
+                                    <th class="p-3">ชื่อ</th>
+                                    <th class="p-3">นามสกุล</th>
+                                    <th class="p-3">สาขาวิชา</th>
+                                    <th class="p-3 text-center w-20">ประเมิน</th>
+                                    <th class="p-3 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Cards -->
+                <div class="block md:hidden space-y-3">
+                    <div class="flex items-center justify-between px-1">
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-address-card text-orange-500"></i>
+                            <span>รายชื่อนิสิต (มือถือ)</span>
+                        </span>
+                    </div>
+                    <div id="rosterMobileCards" class="space-y-3"></div>
+                </div>
+
+                <!-- Roster Empty State -->
+                <div id="rosterEmptyState" class="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-xs hidden">
+                    <div class="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-3 text-2xl">
+                        <i class="fa-solid fa-user-slash"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-slate-700">ไม่พบรายชื่อนิสิต</h4>
+                    <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือเพิ่มนิสิตใหม่</p>
+                </div>
+            </div><!-- /rosterView -->
 
         </main>
 
@@ -706,6 +869,414 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- 4.2 BATCH STUDENT NAME EDITOR MODAL -->
+    <!-- ========================================== -->
+    <div id="batchNameModal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div
+            class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-xl shadow-2xl border border-slate-100 relative overflow-hidden my-6 max-h-[90vh] flex flex-col">
+            <!-- Modal Accent Gradient -->
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600">
+            </div>
+
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shadow-2xs">
+                        <i class="fa-solid fa-user-pen text-base"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">
+                            ค้นหาและแก้ไขชื่อ-นามสกุลนิสิต
+                        </h2>
+                        <p class="text-xs text-slate-400">ค้นหารายชื่อเดิม และปรับปรุงข้อมูลใหม่ไปยังทุกการประเมินในระบบ</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBatchNameModal()"
+                    class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="space-y-4 overflow-y-auto pr-1 flex-grow">
+                <!-- STEP 1: Search Existing Student -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="batchSearchInput" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-magnifying-glass text-orange-500"></i>
+                            <span>1. ค้นหาชื่อหรือนามสกุลเดิม</span>
+                        </label>
+                        <span id="batchStudentPoolCount" class="text-[11px] text-slate-400"></span>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-user text-xs"></i>
+                        </div>
+                        <input type="text" id="batchSearchInput" autocomplete="off"
+                            placeholder="พิมพ์ชื่อหรือนามสกุล หรือกดปุ่มลูกศรเพื่อเลือก..."
+                            class="w-full pl-10 pr-16 py-3 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white focus:border-transparent transition-all text-sm placeholder-slate-400 cursor-pointer">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
+                            <button type="button" id="clearBatchSearchBtn" onclick="clearBatchSearch()"
+                                class="text-slate-400 hover:text-slate-600 p-1 hidden" title="ล้างคำค้นหา">
+                                <i class="fa-solid fa-circle-xmark text-sm"></i>
+                            </button>
+                            <button type="button" id="toggleBatchDropdownBtn" onclick="toggleBatchDropdown()"
+                                class="text-slate-400 hover:text-orange-600 p-1.5 rounded-lg transition-colors cursor-pointer" title="คลิกดูรายชื่อนิสิตทั้งหมด">
+                                <i id="batchDropdownArrow" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Autocomplete Suggestions Dropdown Box (100% Guaranteed Visible & Unclipped) -->
+                    <div id="batchSuggestions"
+                        class="mt-2 bg-white border border-orange-200/90 rounded-2xl shadow-lg hidden max-h-56 overflow-y-auto divide-y divide-slate-100 transition-all">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1 ml-1">พิมพ์ตัวอักษรเพื่อดูรายชื่อนิสิตที่ตรงกัน แล้วคลิกเลือกรายชื่อที่ต้องการแก้ไข</p>
+                </div>
+
+                <!-- Selected Student Summary Card -->
+                <div id="selectedStudentSummary" class="hidden bg-orange-50/80 border border-orange-200/90 rounded-2xl p-4 transition-all">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0 border border-orange-200">
+                                <i class="fa-solid fa-user-graduate text-base"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-200/60 px-2 py-0.5 rounded-full">นิสิตที่เลือก</span>
+                                <h4 id="selectedStudentFullName" class="text-sm font-bold text-slate-800 mt-0.5"></h4>
+                                <p id="selectedStudentMajor" class="text-xs text-slate-500 mt-0.5"></p>
+                            </div>
+                        </div>
+                        <span id="matchingRowsCountBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-200 text-orange-900 shrink-0">
+                            พบ 0 รายการ
+                        </span>
+                    </div>
+                </div>
+
+                <!-- STEP 2: New Name Input Fields -->
+                <div id="newNameSection" class="hidden space-y-3 pt-3 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square text-orange-500"></i>
+                            <span>2. กำหนดข้อมูลใหม่ที่ถูกต้อง</span>
+                        </span>
+                        <span class="text-[11px] text-slate-400">(เว้นว่างช่องที่ไม่ต้องการเปลี่ยน)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label for="newStudentPrefixSelect" class="block text-xs font-medium text-slate-600 mb-1">
+                                <span>คำนำหน้าใหม่</span>
+                                <span class="text-[10px] text-slate-400">(เลือกจากรายการ)</span>
+                            </label>
+                            <div class="relative">
+                                <select id="newStudentPrefixSelect" onchange="handlePrefixSelectChange()"
+                                    class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm appearance-none pr-8 cursor-pointer">
+                                    <option value="__KEEP__">(คงเดิมตามข้อมูลเดิม)</option>
+                                    <option value="นาย">นาย</option>
+                                    <option value="นางสาว">นางสาว</option>
+                                    <option value="นาง">นาง</option>
+                                    <option value="__OTHER__">อื่นๆ (ระบุเอง)...</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                            <input type="text" id="customStudentPrefix" placeholder="พิมพ์คำนำหน้าเอง..."
+                                class="w-full mt-1.5 p-2 bg-white border border-orange-200 rounded-xl text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 hidden">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">ชื่อใหม่ <span class="text-rose-500">*</span></label>
+                            <input type="text" id="newStudentName" placeholder="ระบุชื่อที่ถูกต้อง"
+                                class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">นามสกุลใหม่ <span class="text-rose-500">*</span></label>
+                            <input type="text" id="newStudentSurname" placeholder="ระบุนามสกุลที่ถูกต้อง"
+                                class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Live Diff Comparison Box -->
+                    <div id="diffPreviewBox" class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400 font-medium w-14 shrink-0">ข้อมูลเดิม:</span>
+                            <span id="diffOldName" class="font-medium text-slate-600 line-through decoration-rose-400"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-700 font-bold w-14 shrink-0 flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i> ข้อมูลใหม่:
+                            </span>
+                            <span id="diffNewName" class="font-bold text-emerald-700 text-sm"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: List of Affected Evaluation Rows -->
+                <div id="affectedRowsSection" class="hidden space-y-2.5 pt-3 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check text-orange-500"></i>
+                            <span>3. รายการการประเมินที่จะอัปเดตข้อมูล</span>
+                        </span>
+                        <label class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 cursor-pointer">
+                            <input type="checkbox" id="selectAllBatchRows" checked onchange="toggleSelectAllBatchRows(this.checked)"
+                                class="rounded text-orange-600 focus:ring-orange-500 w-3.5 h-3.5">
+                            <span>เลือกทั้งหมด</span>
+                        </label>
+                    </div>
+
+                    <div id="batchRowsListContainer" class="space-y-2 max-h-44 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-end gap-2.5 shrink-0">
+                <button type="button" onclick="closeBatchNameModal()"
+                    class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-colors">
+                    ยกเลิก
+                </button>
+                <button type="button" id="saveBatchNameBtn" onclick="submitBatchNameUpdate()" disabled
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:from-orange-700 active:to-amber-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-check"></i>
+                    <span>ยืนยันและบันทึกการแก้ไข</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 5. STUDENT FORM MODAL (Add/Edit Student in Roster) -->
+    <!-- ========================================== -->
+    <div id="studentFormModal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-slate-100 relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600"></div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                        <i id="studentFormIcon" class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h2 id="studentFormTitle" class="text-base sm:text-lg font-bold text-slate-800 leading-tight">เพิ่มนิสิตใหม่</h2>
+                        <p class="text-xs text-slate-400">บันทึกลงฐานข้อมูลรายชื่อนิสิต (Sheet1)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeStudentFormModal()"
+                    class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <input type="hidden" id="studentFormRowNumber">
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label for="studentFormPrefix" class="block text-xs font-medium text-slate-600 mb-1">คำนำหน้า</label>
+                    <select id="studentFormPrefix"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                        <option value="นาย">นาย</option>
+                        <option value="นางสาว">นางสาว</option>
+                        <option value="นาง">นาง</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="studentFormFirstName" class="block text-xs font-medium text-slate-600 mb-1">ชื่อ <span class="text-rose-500">*</span></label>
+                    <input id="studentFormFirstName" type="text" placeholder="กรอกชื่อนิสิต"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                </div>
+                <div>
+                    <label for="studentFormLastName" class="block text-xs font-medium text-slate-600 mb-1">นามสกุล <span class="text-rose-500">*</span></label>
+                    <input id="studentFormLastName" type="text" placeholder="กรอกนามสกุล"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                </div>
+                <div>
+                    <label for="studentFormMajor" class="block text-xs font-medium text-slate-600 mb-1">สาขาวิชา</label>
+                    <select id="studentFormMajor"
+                        class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                        <option value="">-- เลือกสาขาวิชา --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeStudentFormModal()"
+                    class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-xs sm:text-sm transition-colors">ยกเลิก</button>
+                <button type="button" onclick="submitStudentForm()"
+                    class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span id="studentFormSubmitText">บันทึก</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 6. BATCH IMPORT MODAL (Excel / Google Sheet) -->
+    <!-- ========================================== -->
+    <div id="batchImportModal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl border border-slate-100 relative overflow-hidden my-6 max-h-[92vh] flex flex-col">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600"></div>
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-2xs">
+                        <i class="fa-solid fa-file-import text-base"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800">นำเข้ารายชื่อนิสิต (Batch Import)</h2>
+                        <p class="text-xs text-slate-400">อัปโหลดไฟล์ Excel / CSV หรือวางลิงก์ Google Sheet สาธารณะ</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBatchImportModal()"
+                    class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Steps Content (Scrollable) -->
+            <div class="space-y-4 overflow-y-auto pr-1 flex-grow">
+                <!-- Step 1: Source -->
+                <div class="space-y-3">
+                    <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-500"></i>
+                        <span>1. เลือกแหล่งข้อมูล</span>
+                    </span>
+                    <!-- File Upload -->
+                    <div id="importDropZone"
+                        class="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-50 hover:bg-emerald-50/30"
+                        ondragover="event.preventDefault();this.classList.add('border-emerald-400','bg-emerald-50/30')"
+                        ondragleave="this.classList.remove('border-emerald-400','bg-emerald-50/30')"
+                        ondrop="event.preventDefault();this.classList.remove('border-emerald-400','bg-emerald-50/30');handleImportFileDrop(event)"
+                        onclick="document.getElementById('importFileInput').click()">
+                        <i class="fa-solid fa-file-excel text-3xl text-emerald-400 mb-2"></i>
+                        <p class="text-sm text-slate-600 font-medium">ลากวางไฟล์ Excel / CSV ตรงนี้</p>
+                        <p class="text-xs text-slate-400 mt-1">หรือคลิกเพื่อเลือกไฟล์ (.xlsx, .xls, .csv)</p>
+                        <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleImportFileSelect(event)">
+                    </div>
+                    <p id="importFileName" class="text-xs text-emerald-600 font-medium hidden">
+                        <i class="fa-solid fa-check-circle mr-1"></i><span></span>
+                    </p>
+                    <!-- OR divider -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-grow border-t border-slate-200"></div>
+                        <span class="text-xs text-slate-400 font-medium">หรือ</span>
+                        <div class="flex-grow border-t border-slate-200"></div>
+                    </div>
+                    <!-- Google Sheet Link -->
+                    <div>
+                        <label for="importGSheetUrl" class="block text-xs font-medium text-slate-600 mb-1">
+                            <i class="fa-brands fa-google text-emerald-500 mr-1"></i>ลิงก์ Google Sheet สาธารณะ
+                        </label>
+                        <div class="flex gap-2">
+                            <input id="importGSheetUrl" type="text" placeholder="วาง URL ของ Google Sheet ที่เผยแพร่สาธารณะ..."
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm placeholder-slate-400">
+                            <button type="button" onclick="fetchFromGoogleSheet()"
+                                class="shrink-0 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-semibold shadow-xs transition-all">ดึงข้อมูล</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Column Mapping (hidden initially) -->
+                <div id="importStep2" class="hidden space-y-3 pt-3 border-t border-slate-100">
+                    <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-columns text-emerald-500"></i>
+                        <span>2. จับคู่คอลัมน์</span>
+                    </span>
+                    <p class="text-xs text-slate-500">เลือกคอลัมน์ในไฟล์ที่ตรงกับข้อมูลแต่ละช่อง</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">คอลัมน์ "คำนำหน้า"</label>
+                            <select id="mapPrefix" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500">
+                                <option value="">-- ไม่จับคู่ --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">คอลัมน์ "ชื่อ" <span class="text-rose-500">*</span></label>
+                            <select id="mapFirstName" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500">
+                                <option value="">-- เลือกคอลัมน์ --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">คอลัมน์ "นามสกุล" <span class="text-rose-500">*</span></label>
+                            <select id="mapLastName" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500">
+                                <option value="">-- เลือกคอลัมน์ --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">คอลัมน์ "สาขาวิชา"</label>
+                            <select id="mapMajor" onchange="handleMapMajorChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500">
+                                <option value="">-- ไม่จับคู่ (ใช้สาขาวิชาเดียวกัน) --</option>
+                            </select>
+                            <div id="fixedMajorWrap" class="mt-1.5">
+                                <input id="fixedMajorInput" type="text" placeholder="ระบุสาขาวิชาที่ใช้ร่วมกัน (ถ้าไม่มีคอลัมน์)"
+                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="processImportMapping()"
+                        class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold shadow-xs transition-all">
+                        <i class="fa-solid fa-eye mr-1"></i>ดูตัวอย่าง (Preview)
+                    </button>
+                </div>
+
+                <!-- Step 3: Preview (hidden initially) -->
+                <div id="importStep3" class="hidden space-y-3 pt-3 border-t border-slate-100">
+                    <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check text-emerald-500"></i>
+                        <span>3. ตรวจสอบและเลือกโหมดนำเข้า</span>
+                    </span>
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span id="importPreviewTotal" class="text-xs text-slate-600 font-medium"></span>
+                        <span id="importPreviewDups" class="text-xs text-amber-600 font-medium hidden"></span>
+                    </div>
+                    <!-- Duplicate Mode -->
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg cursor-pointer has-[:checked]:bg-emerald-100 has-[:checked]:border-emerald-400 transition-colors">
+                            <input type="radio" name="dupMode" value="skip" checked class="text-emerald-600 focus:ring-emerald-500">
+                            <span>ข้ามรายการซ้ำ (แนะนำ)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer has-[:checked]:bg-amber-50 has-[:checked]:border-amber-400 transition-colors">
+                            <input type="radio" name="dupMode" value="overwrite" class="text-amber-600 focus:ring-amber-500">
+                            <span>อัปเดตทับข้อมูลเดิม</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400 transition-colors">
+                            <input type="radio" name="dupMode" value="append" class="text-blue-600 focus:ring-blue-500">
+                            <span>นำเข้าทั้งหมด</span>
+                        </label>
+                    </div>
+                    <!-- Preview Table -->
+                    <div class="max-h-52 overflow-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-xs">
+                            <thead class="bg-slate-50 sticky top-0">
+                                <tr>
+                                    <th class="p-2 text-left text-slate-600">#</th>
+                                    <th class="p-2 text-left text-slate-600">คำนำหน้า</th>
+                                    <th class="p-2 text-left text-slate-600">ชื่อ</th>
+                                    <th class="p-2 text-left text-slate-600">นามสกุล</th>
+                                    <th class="p-2 text-left text-slate-600">สาขาวิชา</th>
+                                    <th class="p-2 text-center text-slate-600">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="importPreviewBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-end gap-2.5 shrink-0">
+                <button type="button" onclick="closeBatchImportModal()"
+                    class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-colors">ยกเลิก</button>
+                <button type="button" id="importSubmitBtn" onclick="submitBatchImport()" disabled
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>นำเข้าข้อมูล</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ========================================== -->
     <!-- 4. HELP GUIDE MODAL -->
@@ -746,6 +1317,18 @@
                         class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">4</span>
                     <p><strong>การควบคุมรอบการประเมิน (Admin):</strong> สำหรับสิทธิ์ All
                         สามารถกดเปิดหรือปิดรับการประเมินในแต่ละรอบสัปดาห์ได้โดยตรง</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span
+                        class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">5</span>
+                    <p><strong>การแก้ไขชื่อ-นามสกุลนิสิต:</strong> กดปุ่ม "แก้ไขชื่อ-นามสกุลนิสิต"
+                        เพื่อค้นหาชื่อเดิมที่มีการกรอกผิด แล้วอัปเดตชื่อหรือนามสกุลใหม่ให้กับทุกการประเมินของนิสิตคนนั้นได้ในคลิกเดียว</p>
+                </div>
+                <div class="flex gap-2.5 items-start">
+                    <span
+                        class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">6</span>
+                    <p><strong>จัดการรายชื่อนิสิต (CRUD):</strong> สลับไปแท็บ "จัดการรายชื่อนิสิต" เพื่อเพิ่ม แก้ไข ลบรายชื่อนิสิตฝึกสอน
+                        หรือนำเข้ารายชื่อจำนวนมากจากไฟล์ Excel หรือลิงก์ Google Sheet สาธารณะได้</p>
                 </div>
             </div>
             <div class="pt-3 border-t border-slate-100 text-right">
@@ -974,6 +1557,8 @@
             if (response && typeof response === 'object' && response.error) {
                 Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการโหลดข้อมูล', text: response.error, showConfirmButton: true });
                 allSheetData = [];
+                var evalBadgeErr = document.getElementById('tabBadgeEval');
+                if (evalBadgeErr) evalBadgeErr.textContent = '0';
                 renderTable();
                 return;
             }
@@ -983,6 +1568,8 @@
             } else {
                 allSheetData = response;
             }
+            var evalBadge = document.getElementById('tabBadgeEval');
+            if (evalBadge) evalBadge.textContent = allSheetData.length;
             renderTable();
         }
 
@@ -1020,10 +1607,22 @@
         }
 
         function renderTable() {
-            const nameSearch = document.getElementById('nameSearch').value.toLowerCase();
-            const surnameSearch = document.getElementById('surnameSearch').value.toLowerCase();
+            const nameSearch = document.getElementById('nameSearch').value.toLowerCase().trim();
+            const surnameSearch = document.getElementById('surnameSearch').value.toLowerCase().trim();
             const evaluatorFilter = document.getElementById('evaluatorFilter').value;
             const evalTimeFilter = document.getElementById('evalTimeFilter').value;
+
+            // Toggle clear search buttons (Jakob Nielsen Heuristic 3: User Control & Freedom)
+            const clearNameBtn = document.getElementById('clearNameSearchBtn');
+            if (clearNameBtn) {
+                if (nameSearch.length > 0) clearNameBtn.classList.remove('hidden');
+                else clearNameBtn.classList.add('hidden');
+            }
+            const clearSurnameBtn = document.getElementById('clearSurnameSearchBtn');
+            if (clearSurnameBtn) {
+                if (surnameSearch.length > 0) clearSurnameBtn.classList.remove('hidden');
+                else clearSurnameBtn.classList.add('hidden');
+            }
 
             const currentDataObjects = Array.isArray(allSheetData) ? allSheetData : [];
 
@@ -1260,11 +1859,27 @@
             });
         }
 
+        function clearFilterField(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = '';
+                const btnId = id === 'nameSearch' ? 'clearNameSearchBtn' : 'clearSurnameSearchBtn';
+                const btn = document.getElementById(btnId);
+                if (btn) btn.classList.add('hidden');
+                renderTable();
+                el.focus();
+            }
+        }
+
         function resetFilters() {
             document.getElementById('nameSearch').value = '';
             document.getElementById('surnameSearch').value = '';
             document.getElementById('evaluatorFilter').value = '';
             document.getElementById('evalTimeFilter').value = '';
+            const clearNameBtn = document.getElementById('clearNameSearchBtn');
+            if (clearNameBtn) clearNameBtn.classList.add('hidden');
+            const clearSurnameBtn = document.getElementById('clearSurnameSearchBtn');
+            if (clearSurnameBtn) clearSurnameBtn.classList.add('hidden');
             renderTable();
         }
 
@@ -1396,10 +2011,993 @@
             deadlineInputElem.addEventListener('input', updateDeadlinePreview);
         }
 
+        // ==========================================
+        // 6. ฟังก์ชันจัดการค้นหาและแก้ไขชื่อ-นามสกุลนิสิต (Batch Student Name Editor)
+        // ออกแบบตามหลัก 10 ข้อของ Jakob Nielsen
+        // ==========================================
+        let currentSelectedStudent = null;
+        let distinctStudentsCache = [];
+
+        function buildDistinctStudents() {
+            const map = new Map();
+            if (!Array.isArray(allSheetData)) return [];
+            allSheetData.forEach(item => {
+                const row = item.rowData;
+                if (!row || row.length < 6) return;
+                const prefix = (row[3] || '').trim();
+                const name = (row[4] || '').trim();
+                const surname = (row[5] || '').trim();
+                const major = (row[6] || '').trim();
+                if (!name && !surname) return;
+                const key = `${name.toLowerCase()}|${surname.toLowerCase()}`;
+                if (!map.has(key)) {
+                    map.set(key, {
+                        prefix: prefix,
+                        name: name,
+                        surname: surname,
+                        major: major,
+                        fullName: `${prefix ? prefix + ' ' : ''}${name} ${surname}`.trim(),
+                        rows: []
+                    });
+                }
+                map.get(key).rows.push(item);
+            });
+            return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'th'));
+        }
+
+        function openBatchNameModal() {
+            currentSelectedStudent = null;
+            document.getElementById('batchSearchInput').value = '';
+            document.getElementById('clearBatchSearchBtn').classList.add('hidden');
+            const sugBox = document.getElementById('batchSuggestions');
+            sugBox.classList.add('hidden');
+            sugBox.innerHTML = '';
+            setBatchArrowState(false);
+            document.getElementById('selectedStudentSummary').classList.add('hidden');
+            document.getElementById('newNameSection').classList.add('hidden');
+            document.getElementById('affectedRowsSection').classList.add('hidden');
+            document.getElementById('saveBatchNameBtn').disabled = true;
+
+            distinctStudentsCache = buildDistinctStudents();
+            const poolElem = document.getElementById('batchStudentPoolCount');
+            if (poolElem) {
+                poolElem.textContent = `(มีทั้งหมด ${distinctStudentsCache.length} รายชื่อ)`;
+            }
+
+            document.getElementById('batchNameModal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('batchSearchInput').focus();
+                renderBatchSuggestionsDropdown(''); // Show dropdown immediately on open!
+            }, 100);
+        }
+
+        function closeBatchNameModal() {
+            document.getElementById('batchNameModal').classList.add('hidden');
+            document.getElementById('batchSuggestions').classList.add('hidden');
+            setBatchArrowState(false);
+        }
+
+        function setBatchArrowState(isOpen) {
+            const arrow = document.getElementById('batchDropdownArrow');
+            if (arrow) {
+                if (isOpen) {
+                    arrow.className = 'fa-solid fa-chevron-up text-xs text-orange-600 transition-transform duration-200';
+                } else {
+                    arrow.className = 'fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200';
+                }
+            }
+        }
+
+        function toggleBatchDropdown() {
+            const sugBox = document.getElementById('batchSuggestions');
+            if (sugBox.classList.contains('hidden')) {
+                renderBatchSuggestionsDropdown(document.getElementById('batchSearchInput').value.trim());
+            } else {
+                sugBox.classList.add('hidden');
+                setBatchArrowState(false);
+            }
+        }
+
+        function clearBatchSearch() {
+            const inp = document.getElementById('batchSearchInput');
+            inp.value = '';
+            document.getElementById('clearBatchSearchBtn').classList.add('hidden');
+            renderBatchSuggestionsDropdown('');
+            inp.focus();
+        }
+
+        function renderBatchSuggestionsDropdown(query) {
+            const val = (query || '').toLowerCase().trim();
+            const sugBox = document.getElementById('batchSuggestions');
+            const clearBtn = document.getElementById('clearBatchSearchBtn');
+
+            if (val.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            if (!distinctStudentsCache || distinctStudentsCache.length === 0) {
+                distinctStudentsCache = buildDistinctStudents();
+            }
+
+            let matches = distinctStudentsCache;
+            if (val.length > 0) {
+                matches = distinctStudentsCache.filter(st =>
+                    st.name.toLowerCase().includes(val) ||
+                    st.surname.toLowerCase().includes(val) ||
+                    st.fullName.toLowerCase().includes(val)
+                );
+            }
+
+            sugBox.innerHTML = '';
+
+            // Header for dropdown
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-semibold uppercase tracking-wider sticky top-0';
+            headerDiv.innerHTML = `
+                <span>${val ? 'ผลการค้นหา' : 'รายชื่อนิสิตทั้งหมด'} (${matches.length} คน)</span>
+                <span class="text-[10px] text-orange-600 font-normal">คลิกเพื่อเลือก</span>
+            `;
+            sugBox.appendChild(headerDiv);
+
+            if (matches.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'px-4 py-4 text-xs text-slate-400 text-center italic';
+                emptyDiv.textContent = `ไม่พบรายชื่อนิสิตที่ตรงกับ "${query}"`;
+                sugBox.appendChild(emptyDiv);
+            } else {
+                matches.slice(0, 25).forEach(st => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'px-4 py-3 hover:bg-orange-50 cursor-pointer flex items-center justify-between transition-colors text-xs text-slate-700 active:bg-orange-100';
+                    itemDiv.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 text-[10px]">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${st.fullName}</p>
+                                ${st.major ? `<p class="text-[11px] text-slate-400">${st.major}</p>` : ''}
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold text-orange-700 bg-orange-100/90 border border-orange-200/80 px-2.5 py-0.5 rounded-full shrink-0">
+                            ${st.rows.length} การประเมิน
+                        </span>
+                    `;
+                    itemDiv.onclick = () => selectStudentForBatchUpdate(st);
+                    sugBox.appendChild(itemDiv);
+                });
+            }
+
+            sugBox.classList.remove('hidden');
+            setBatchArrowState(true);
+        }
+
+        function handleBatchSearchInput() {
+            const inp = document.getElementById('batchSearchInput');
+            renderBatchSuggestionsDropdown(inp.value.trim());
+        }
+
+        function handlePrefixSelectChange() {
+            const select = document.getElementById('newStudentPrefixSelect');
+            const customInput = document.getElementById('customStudentPrefix');
+            if (select.value === '__OTHER__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+            updateLiveDiff();
+        }
+
+        function getEffectiveNewPrefix() {
+            if (!currentSelectedStudent) return '';
+            const select = document.getElementById('newStudentPrefixSelect');
+            if (select.value === '__KEEP__') {
+                return currentSelectedStudent.prefix || '';
+            }
+            if (select.value === '__OTHER__') {
+                return document.getElementById('customStudentPrefix').value.trim();
+            }
+            return select.value;
+        }
+
+        function selectStudentForBatchUpdate(student) {
+            currentSelectedStudent = student;
+            document.getElementById('batchSearchInput').value = student.fullName;
+            document.getElementById('batchSuggestions').classList.add('hidden');
+            setBatchArrowState(false);
+            document.getElementById('clearBatchSearchBtn').classList.remove('hidden');
+
+            // Show Student Summary
+            document.getElementById('selectedStudentSummary').classList.remove('hidden');
+            document.getElementById('selectedStudentFullName').textContent = student.fullName;
+            document.getElementById('selectedStudentMajor').textContent = student.major ? `สาขาวิชา: ${student.major}` : 'สาขาวิชา: ไม่ระบุ';
+            document.getElementById('matchingRowsCountBadge').textContent = `พบ ${student.rows.length} รายการประเมิน`;
+
+            // Setup Prefix Select
+            const prefixSelect = document.getElementById('newStudentPrefixSelect');
+            const customPrefix = document.getElementById('customStudentPrefix');
+            const standardPrefixes = ['นาย', 'นางสาว', 'นาง'];
+
+            if (student.prefix && standardPrefixes.includes(student.prefix)) {
+                prefixSelect.value = student.prefix;
+                customPrefix.classList.add('hidden');
+                customPrefix.value = '';
+            } else if (student.prefix) {
+                prefixSelect.value = '__OTHER__';
+                customPrefix.value = student.prefix;
+                customPrefix.classList.remove('hidden');
+            } else {
+                prefixSelect.value = '__KEEP__';
+                customPrefix.classList.add('hidden');
+                customPrefix.value = '';
+            }
+
+            // Pre-fill Step 2 Inputs
+            document.getElementById('newStudentName').value = student.name || '';
+            document.getElementById('newStudentSurname').value = student.surname || '';
+            document.getElementById('newNameSection').classList.remove('hidden');
+
+            // Populate Step 3 Affected Rows
+            const container = document.getElementById('batchRowsListContainer');
+            container.innerHTML = '';
+            student.rows.forEach(item => {
+                const row = item.rowData;
+                const rowNum = item.originalSheetRow;
+                const rowCard = document.createElement('div');
+                rowCard.className = 'p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs text-slate-700 hover:bg-orange-50/40 transition-colors';
+                rowCard.innerHTML = `
+                    <label class="flex items-center gap-2.5 cursor-pointer flex-grow">
+                        <input type="checkbox" name="batchRowCheck" value="${rowNum}" checked class="rounded text-orange-600 focus:ring-orange-500 w-3.5 h-3.5" onchange="updateBatchSaveButtonState()">
+                        <div>
+                            <span class="font-bold text-slate-800">แถวที่ ${rowNum}:</span>
+                            <span class="text-slate-600 ml-1 font-medium">${row[1] || 'ไม่ระบุผู้ประเมิน'}</span>
+                            <span class="text-orange-600 ml-1">(${row[2] || '-'})</span>
+                        </div>
+                    </label>
+                    <span class="text-[11px] text-slate-400 font-mono">${row[0] || ''}</span>
+                `;
+                container.appendChild(rowCard);
+            });
+            document.getElementById('selectAllBatchRows').checked = true;
+            document.getElementById('affectedRowsSection').classList.remove('hidden');
+
+            updateLiveDiff();
+        }
+
+        function updateLiveDiff() {
+            if (!currentSelectedStudent) return;
+            const oldFull = currentSelectedStudent.fullName;
+
+            const effectivePrefix = getEffectiveNewPrefix();
+            const newN = document.getElementById('newStudentName').value.trim();
+            const newS = document.getElementById('newStudentSurname').value.trim();
+
+            const newFull = `${effectivePrefix ? effectivePrefix + ' ' : ''}${newN} ${newS}`.trim();
+
+            document.getElementById('diffOldName').textContent = oldFull;
+            document.getElementById('diffNewName').textContent = newFull || '(กรุณากรอกชื่อและนามสกุลใหม่)';
+
+            updateBatchSaveButtonState();
+        }
+
+        function updateBatchSaveButtonState() {
+            if (!currentSelectedStudent) return;
+            const newN = document.getElementById('newStudentName').value.trim();
+            const newS = document.getElementById('newStudentSurname').value.trim();
+            const effectivePrefix = getEffectiveNewPrefix();
+
+            const oldFull = currentSelectedStudent.fullName;
+            const newFull = `${effectivePrefix ? effectivePrefix + ' ' : ''}${newN} ${newS}`.trim();
+
+            const checkedRows = document.querySelectorAll('input[name="batchRowCheck"]:checked');
+            const hasChanges = (newFull !== oldFull) && newN.length > 0 && newS.length > 0 && checkedRows.length > 0;
+
+            const saveBtn = document.getElementById('saveBatchNameBtn');
+            saveBtn.disabled = !hasChanges;
+        }
+
+        function toggleSelectAllBatchRows(checked) {
+            const checkboxes = document.querySelectorAll('input[name="batchRowCheck"]');
+            checkboxes.forEach(cb => cb.checked = checked);
+            updateBatchSaveButtonState();
+        }
+
+        function submitBatchNameUpdate() {
+            if (!currentSelectedStudent) return;
+            const newP = getEffectiveNewPrefix();
+            const newN = document.getElementById('newStudentName').value.trim();
+            const newS = document.getElementById('newStudentSurname').value.trim();
+
+            if (!newN || !newS) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ข้อมูลไม่ครบถ้วน',
+                    text: 'กรุณาระบุทั้งชื่อและนามสกุลใหม่ของนิสิต',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#ea580c',
+                    customClass: { popup: 'rounded-2xl font-sans' }
+                });
+                return;
+            }
+
+            const checkedBoxes = document.querySelectorAll('input[name="batchRowCheck"]:checked');
+            const rowNumbers = Array.from(checkedBoxes).map(cb => parseInt(cb.value, 10));
+
+            if (rowNumbers.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่ได้เลือกแถวข้อมูล',
+                    text: 'กรุณาเลือกรายการการประเมินที่ต้องการอัปเดตอย่างน้อย 1 รายการ',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#ea580c',
+                    customClass: { popup: 'rounded-2xl font-sans' }
+                });
+                return;
+            }
+
+            const oldFullName = currentSelectedStudent.fullName;
+            const newFullName = `${newP ? newP + ' ' : ''}${newN} ${newS}`.trim();
+
+            Swal.fire({
+                title: '<div class="text-base sm:text-lg font-bold text-slate-800">ยืนยันการแก้ไขชื่อ-นามสกุลนิสิต</div>',
+                html: `
+                    <div class="text-left text-xs sm:text-sm space-y-3 mt-3 text-slate-600">
+                        <div class="p-3.5 bg-orange-50 border border-orange-200 rounded-2xl space-y-2">
+                            <div><span class="text-slate-400 font-medium">ชื่อเดิม:</span> <b class="text-slate-700 line-through">${oldFullName}</b></div>
+                            <div><span class="text-emerald-700 font-bold">ชื่อใหม่:</span> <b class="text-emerald-700 text-sm sm:text-base">${newFullName}</b></div>
+                        </div>
+                        <p class="text-slate-500 leading-relaxed">
+                            ระบบจะทำการอัปเดตข้อมูลไปยัง Google Sheet ใน <b>${rowNumbers.length} รายการประเมิน</b> ที่เลือกไว้ทันที
+                        </p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-floppy-disk mr-1"></i> ยืนยันบันทึก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#94a3b8',
+                reverseButtons: true,
+                focusConfirm: true,
+                customClass: {
+                    popup: 'rounded-3xl p-6 font-sans',
+                    confirmButton: 'rounded-xl px-5 py-2.5 font-medium text-xs sm:text-sm shadow-md',
+                    cancelButton: 'rounded-xl px-5 py-2.5 font-medium text-xs sm:text-sm'
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังบันทึกข้อมูล...',
+                        html: '<span class="text-xs text-slate-500">กำลังอัปเดตชื่อ-นามสกุลใน Google Sheet...</span>',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading(),
+                        customClass: { popup: 'rounded-2xl font-sans' }
+                    });
+
+                    const token = localStorage.getItem('authToken');
+                    const department = localStorage.getItem('userDepartment') || 'all';
+
+                    google.script.run
+                        .withSuccessHandler(response => {
+                            Swal.close();
+                            if (response && response.success) {
+                                // Update local allSheetData immediately without reloading
+                                rowNumbers.forEach(rNum => {
+                                    const item = allSheetData.find(it => it.originalSheetRow === rNum);
+                                    if (item && Array.isArray(item.rowData)) {
+                                        if (newP) item.rowData[3] = newP;
+                                        if (newN) item.rowData[4] = newN;
+                                        if (newS) item.rowData[5] = newS;
+                                    }
+                                });
+
+                                renderTable();
+                                closeBatchNameModal();
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'แก้ไขข้อมูลสำเร็จ',
+                                    text: response.message || `อัปเดตชื่อนิสิตเป็น "${newFullName}" เรียบร้อยแล้ว`,
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                    customClass: { popup: 'rounded-2xl font-sans' }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาดในการบันทึก',
+                                    text: (response && response.error) ? response.error : 'ไม่สามารถบันทึกข้อมูลได้',
+                                    confirmButtonText: 'ตกลง',
+                                    confirmButtonColor: '#ea580c',
+                                    customClass: { popup: 'rounded-2xl font-sans' }
+                                });
+                            }
+                        })
+                        .withFailureHandler(err => {
+                            Swal.close();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+                                text: err.message || 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ในขณะนี้',
+                                confirmButtonText: 'ตกลง',
+                                confirmButtonColor: '#ea580c',
+                                customClass: { popup: 'rounded-2xl font-sans' }
+                            });
+                        })
+                        .batchUpdateStudentNames(token, department, rowNumbers, newP, newN, newS);
+                }
+            });
+        }
+
+        // ==========================================
+        // Keyboard & Event Listeners (Jakob Nielsen Heuristics)
+        // ==========================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeBatchNameModal();
+                closeHelpModal();
+                closeStudentFormModal();
+                closeBatchImportModal();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const sugBox = document.getElementById('batchSuggestions');
+            const searchInp = document.getElementById('batchSearchInput');
+            if (sugBox && searchInp && !sugBox.contains(e.target) && !searchInp.contains(e.target)) {
+                sugBox.classList.add('hidden');
+            }
+        });
+
+        const batchSearchElem = document.getElementById('batchSearchInput');
+        if (batchSearchElem) {
+            batchSearchElem.addEventListener('input', handleBatchSearchInput);
+            batchSearchElem.addEventListener('focus', () => renderBatchSuggestionsDropdown(batchSearchElem.value.trim()));
+            batchSearchElem.addEventListener('click', () => renderBatchSuggestionsDropdown(batchSearchElem.value.trim()));
+        }
+        const customPrefixElem = document.getElementById('customStudentPrefix');
+        if (customPrefixElem) customPrefixElem.addEventListener('input', updateLiveDiff);
+        const nameElem = document.getElementById('newStudentName');
+        if (nameElem) nameElem.addEventListener('input', updateLiveDiff);
+        const surnameElem = document.getElementById('newStudentSurname');
+        if (surnameElem) surnameElem.addEventListener('input', updateLiveDiff);
+
         document.getElementById('nameSearch').addEventListener('input', renderTable);
         document.getElementById('surnameSearch').addEventListener('input', renderTable);
         document.getElementById('evaluatorFilter').addEventListener('change', renderTable);
         document.getElementById('evalTimeFilter').addEventListener('change', renderTable);
+
+        // ==========================================
+        // 7. Tab Switching & Roster Management (CRUD & Batch Import)
+        // ==========================================
+        let rosterData = [];
+        let rosterAllDepartments = [];
+        let rosterLoaded = false;
+        let importRawData = []; // parsed from Excel/GSheet
+        let importHeaders = [];
+        let importMappedStudents = [];
+
+        function switchMainTab(tabName) {
+            const evalView = document.getElementById('evalView');
+            const rosterView = document.getElementById('rosterView');
+            const tabBtnEval = document.getElementById('tabBtnEval');
+            const tabBtnRoster = document.getElementById('tabBtnRoster');
+
+            if (tabName === 'roster') {
+                evalView.classList.add('hidden');
+                rosterView.classList.remove('hidden');
+                tabBtnEval.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 bg-transparent text-slate-500 hover:bg-slate-50';
+                tabBtnRoster.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 bg-orange-500 text-white shadow-md';
+                var badgeE = document.getElementById('tabBadgeEval');
+                var badgeR = document.getElementById('tabBadgeRoster');
+                if (badgeE) badgeE.className = 'hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600';
+                if (badgeR) badgeR.className = 'hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/25 text-white';
+                if (!rosterLoaded) loadStudentRoster();
+            } else {
+                evalView.classList.remove('hidden');
+                rosterView.classList.add('hidden');
+                tabBtnEval.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 bg-orange-500 text-white shadow-md';
+                tabBtnRoster.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 bg-transparent text-slate-500 hover:bg-slate-50';
+                var badgeE2 = document.getElementById('tabBadgeEval');
+                var badgeR2 = document.getElementById('tabBadgeRoster');
+                if (badgeE2) badgeE2.className = 'hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/25 text-white';
+                if (badgeR2) badgeR2.className = 'hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600';
+            }
+        }
+
+        function loadStudentRoster() {
+            var token = localStorage.getItem('authToken');
+            var department = localStorage.getItem('userDepartment');
+            if (!token || !department) return;
+
+            Swal.fire({ title: 'กำลังโหลดรายชื่อนิสิต...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+            google.script.run.withSuccessHandler(function(resp) {
+                Swal.close();
+                if (resp && resp.success) {
+                    rosterData = resp.students || [];
+                    rosterAllDepartments = resp.allDepartments || [];
+                    rosterLoaded = true;
+                    // Update tab badge
+                    var badge = document.getElementById('tabBadgeRoster');
+                    if (badge) badge.textContent = rosterData.length;
+                    // Populate department filter
+                    populateRosterDeptFilter();
+                    renderRosterTable();
+                } else {
+                    Swal.fire('ข้อผิดพลาด', (resp && resp.error) || 'ไม่สามารถโหลดรายชื่อนิสิตได้', 'error');
+                }
+            }).withFailureHandler(function(err) {
+                Swal.close();
+                Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
+            }).getStudentRoster(token, department);
+        }
+
+        function populateRosterDeptFilter() {
+            var sel = document.getElementById('rosterDeptFilter');
+            var current = sel.value;
+            sel.innerHTML = '<option value="">ทุกสาขาวิชา</option>';
+            rosterAllDepartments.forEach(function(d) {
+                var opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                sel.appendChild(opt);
+            });
+            sel.value = current;
+            // hide dept filter if not admin
+            var isAdmin = currentUserDepartment && currentUserDepartment.toLowerCase() === 'all';
+            document.getElementById('rosterDeptFilterWrap').style.display = isAdmin ? '' : 'none';
+        }
+
+        function renderRosterTable() {
+            var q = (document.getElementById('rosterSearchName').value || '').toLowerCase().trim();
+            var deptFilter = (document.getElementById('rosterDeptFilter').value || '').toLowerCase().trim();
+
+            // Clear btn
+            var cb = document.getElementById('clearRosterSearchBtn');
+            if (cb) { if (q.length > 0) cb.classList.remove('hidden'); else cb.classList.add('hidden'); }
+
+            var filtered = rosterData.filter(function(st) {
+                var nameMatch = !q || st.firstName.toLowerCase().includes(q) || st.lastName.toLowerCase().includes(q) || (st.fullName || '').toLowerCase().includes(q);
+                var deptMatch = !deptFilter || st.major.toLowerCase() === deptFilter;
+                return nameMatch && deptMatch;
+            });
+
+            // Stats
+            var statTotal = document.getElementById('rosterStatTotal');
+            var statFiltered = document.getElementById('rosterStatFiltered');
+            var statDepts = document.getElementById('rosterStatDepts');
+            if (statTotal) statTotal.textContent = rosterData.length;
+            if (statFiltered) statFiltered.textContent = filtered.length;
+            if (statDepts) statDepts.textContent = rosterAllDepartments.length;
+
+            var tbody = document.getElementById('rosterTableBody');
+            var mobileCards = document.getElementById('rosterMobileCards');
+            var emptyState = document.getElementById('rosterEmptyState');
+            tbody.innerHTML = '';
+            if (mobileCards) mobileCards.innerHTML = '';
+
+            if (filtered.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
+                return;
+            } else {
+                if (emptyState) emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(function(st, idx) {
+                var evalBadge = st.evalCount > 0
+                    ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">' + st.evalCount + '</span>'
+                    : '<span class="text-slate-400 text-xs">0</span>';
+
+                // Desktop row
+                var tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition-colors';
+                tr.innerHTML =
+                    '<td class="p-3 text-xs text-slate-400">' + (idx + 1) + '</td>' +
+                    '<td class="p-3 text-slate-600">' + (st.prefix || '') + '</td>' +
+                    '<td class="p-3 font-semibold text-slate-800">' + st.firstName + '</td>' +
+                    '<td class="p-3 font-semibold text-slate-800">' + st.lastName + '</td>' +
+                    '<td class="p-3 text-xs text-slate-600">' + (st.major || '-') + '</td>' +
+                    '<td class="p-3 text-center">' + evalBadge + '</td>' +
+                    '<td class="p-3 text-center">' +
+                    '  <div class="inline-flex items-center gap-1.5">' +
+                    '    <button onclick="openStudentFormModal(' + JSON.stringify(st).replace(/"/g, '&quot;') + ')" class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition-colors" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i><span>แก้ไข</span></button>' +
+                    '    <button onclick="deleteStudentRow(' + st.sheetRow + ',\'' + (st.firstName + ' ' + st.lastName).replace(/'/g, "\\'") + '\',' + st.evalCount + ')" class="inline-flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition-colors" title="ลบ"><i class="fa-solid fa-trash-can"></i><span>ลบ</span></button>' +
+                    '  </div>' +
+                    '</td>';
+                tbody.appendChild(tr);
+
+                // Mobile card
+                if (mobileCards) {
+                    var card = document.createElement('div');
+                    card.className = 'p-4 rounded-2xl border bg-white border-slate-100 shadow-xs';
+                    card.innerHTML =
+                        '<div class="flex items-start justify-between gap-2 mb-2">' +
+                        '  <div><h4 class="text-sm font-bold text-slate-800">' + (st.prefix || '') + st.firstName + ' ' + st.lastName + '</h4>' +
+                        '    <p class="text-xs text-slate-500 mt-0.5">สาขา: ' + (st.major || '-') + '</p></div>' +
+                        '  <div>' + evalBadge + '</div>' +
+                        '</div>' +
+                        '<div class="pt-2 border-t border-slate-100/80 flex items-center justify-end gap-2">' +
+                        '  <button onclick="openStudentFormModal(' + JSON.stringify(st).replace(/"/g, '&quot;') + ')" class="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-2xs transition-colors"><i class="fa-solid fa-pen-to-square"></i><span>แก้ไข</span></button>' +
+                        '  <button onclick="deleteStudentRow(' + st.sheetRow + ',\'' + (st.firstName + ' ' + st.lastName).replace(/'/g, "\\'") + '\',' + st.evalCount + ')" class="inline-flex items-center gap-1 bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-2xs transition-colors"><i class="fa-solid fa-trash-can"></i><span>ลบ</span></button>' +
+                        '</div>';
+                    mobileCards.appendChild(card);
+                }
+            });
+        }
+
+        // Roster search & filter listeners
+        var rosterSearchEl = document.getElementById('rosterSearchName');
+        if (rosterSearchEl) rosterSearchEl.addEventListener('input', renderRosterTable);
+        var rosterDeptEl = document.getElementById('rosterDeptFilter');
+        if (rosterDeptEl) rosterDeptEl.addEventListener('change', renderRosterTable);
+
+        // ---- Student Form Modal (Add/Edit) ----
+        function openStudentFormModal(student) {
+            document.getElementById('studentFormRowNumber').value = '';
+            document.getElementById('studentFormPrefix').value = 'นาย';
+            document.getElementById('studentFormFirstName').value = '';
+            document.getElementById('studentFormLastName').value = '';
+
+            // Populate major dropdown
+            var majorSel = document.getElementById('studentFormMajor');
+            majorSel.innerHTML = '<option value="">-- เลือกสาขาวิชา --</option>';
+            rosterAllDepartments.forEach(function(d) {
+                var opt = document.createElement('option');
+                opt.value = d; opt.textContent = d;
+                majorSel.appendChild(opt);
+            });
+
+            if (student && student.sheetRow) {
+                // Edit mode
+                document.getElementById('studentFormTitle').textContent = 'แก้ไขข้อมูลนิสิต';
+                document.getElementById('studentFormIcon').className = 'fa-solid fa-user-pen';
+                document.getElementById('studentFormSubmitText').textContent = 'บันทึกการแก้ไข';
+                document.getElementById('studentFormRowNumber').value = student.sheetRow;
+                document.getElementById('studentFormPrefix').value = student.prefix || 'นาย';
+                document.getElementById('studentFormFirstName').value = student.firstName || '';
+                document.getElementById('studentFormLastName').value = student.lastName || '';
+                document.getElementById('studentFormMajor').value = student.major || '';
+            } else {
+                document.getElementById('studentFormTitle').textContent = 'เพิ่มนิสิตใหม่';
+                document.getElementById('studentFormIcon').className = 'fa-solid fa-user-plus';
+                document.getElementById('studentFormSubmitText').textContent = 'เพิ่มนิสิต';
+                // ถ้าไม่ใช่ admin ให้ล็อคสาขาวิชา
+                var isAdmin = currentUserDepartment && currentUserDepartment.toLowerCase() === 'all';
+                if (!isAdmin && currentUserDepartment) {
+                    majorSel.value = currentUserDepartment;
+                }
+            }
+
+            document.getElementById('studentFormModal').classList.remove('hidden');
+            setTimeout(function() { document.getElementById('studentFormFirstName').focus(); }, 100);
+        }
+
+        function closeStudentFormModal() {
+            document.getElementById('studentFormModal').classList.add('hidden');
+        }
+
+        function submitStudentForm() {
+            var firstName = document.getElementById('studentFormFirstName').value.trim();
+            var lastName = document.getElementById('studentFormLastName').value.trim();
+            if (!firstName || !lastName) {
+                Swal.fire({ icon: 'warning', title: 'กรุณากรอกชื่อและนามสกุลนิสิต', showConfirmButton: true, confirmButtonColor: '#ea580c' });
+                return;
+            }
+            var data = {
+                rowNumber: document.getElementById('studentFormRowNumber').value || null,
+                prefix: document.getElementById('studentFormPrefix').value,
+                firstName: firstName,
+                lastName: lastName,
+                major: document.getElementById('studentFormMajor').value
+            };
+
+            Swal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+            var token = localStorage.getItem('authToken');
+            var department = localStorage.getItem('userDepartment') || 'all';
+
+            google.script.run.withSuccessHandler(function(resp) {
+                Swal.close();
+                if (resp && resp.success) {
+                    closeStudentFormModal();
+                    Swal.fire({ icon: 'success', title: resp.message || 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1800 });
+                    loadStudentRoster();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: (resp && resp.error) || 'ไม่สามารถบันทึกได้', confirmButtonColor: '#ea580c' });
+                }
+            }).withFailureHandler(function(err) {
+                Swal.close();
+                Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
+            }).saveStudentData(token, department, data);
+        }
+
+        // ---- Delete Student ----
+        function deleteStudentRow(rowNumber, name, evalCount) {
+            var warningHtml = '';
+            if (evalCount > 0) {
+                warningHtml = '<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 mb-3">' +
+                    '<i class="fa-solid fa-triangle-exclamation mr-1"></i>' +
+                    '<strong>แจ้งเตือน:</strong> นิสิตคนนี้มีผลการประเมินอยู่ในระบบ <strong>' + evalCount + '</strong> รายการ ' +
+                    'การลบจะลบเฉพาะรายชื่อจากฐานข้อมูล แต่ผลการประเมินที่เคยบันทึกไว้จะยังคงอยู่</div>';
+            }
+            Swal.fire({
+                title: 'ยืนยันการลบนิสิต?',
+                html: warningHtml + '<p class="text-sm text-slate-600">จะลบ <strong>"' + name + '"</strong> ออกจากฐานข้อมูลรายชื่อ</p>',
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#dc2626', cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยันลบ', cancelButtonText: 'ยกเลิก'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                    var token = localStorage.getItem('authToken');
+                    var department = localStorage.getItem('userDepartment') || 'all';
+
+                    google.script.run.withSuccessHandler(function(resp) {
+                        Swal.close();
+                        if (resp && resp.success) {
+                            Swal.fire({ icon: 'success', title: resp.message || 'ลบสำเร็จ', showConfirmButton: false, timer: 1800 });
+                            loadStudentRoster();
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: (resp && resp.error) || 'ไม่สามารถลบได้', confirmButtonColor: '#ea580c' });
+                        }
+                    }).withFailureHandler(function(err) {
+                        Swal.close();
+                        Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
+                    }).deleteStudentCells(token, department, rowNumber);
+                }
+            });
+        }
+
+        // ---- Batch Import Modal ----
+        function openBatchImportModal() {
+            document.getElementById('importFileInput').value = '';
+            document.getElementById('importGSheetUrl').value = '';
+            document.getElementById('importFileName').classList.add('hidden');
+            document.getElementById('importStep2').classList.add('hidden');
+            document.getElementById('importStep3').classList.add('hidden');
+            document.getElementById('importSubmitBtn').disabled = true;
+            importRawData = [];
+            importHeaders = [];
+            importMappedStudents = [];
+
+            var userDept = localStorage.getItem('userDepartment') || '';
+            var fixedInput = document.getElementById('fixedMajorInput');
+            if (fixedInput) {
+                fixedInput.value = (userDept && userDept.toLowerCase() !== 'all') ? userDept : '';
+            }
+            var fixedWrap = document.getElementById('fixedMajorWrap');
+            if (fixedWrap) fixedWrap.classList.remove('hidden');
+
+            document.getElementById('batchImportModal').classList.remove('hidden');
+        }
+
+        function closeBatchImportModal() {
+            document.getElementById('batchImportModal').classList.add('hidden');
+        }
+
+        function handleMapMajorChange() {
+            var sel = document.getElementById('mapMajor');
+            var wrap = document.getElementById('fixedMajorWrap');
+            if (sel && wrap) {
+                if (sel.value !== '') {
+                    wrap.classList.add('hidden');
+                } else {
+                    wrap.classList.remove('hidden');
+                }
+            }
+        }
+
+        function handleImportFileDrop(e) {
+            var files = e.dataTransfer.files;
+            if (files.length > 0) processImportFile(files[0]);
+        }
+
+        function handleImportFileSelect(e) {
+            var files = e.target.files;
+            if (files.length > 0) processImportFile(files[0]);
+        }
+
+        function processImportFile(file) {
+            var fnameEl = document.getElementById('importFileName');
+            fnameEl.querySelector('span').textContent = file.name;
+            fnameEl.classList.remove('hidden');
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var wb = XLSX.read(e.target.result, { type: 'array' });
+                    var ws = wb.Sheets[wb.SheetNames[0]];
+                    var json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                    if (json.length < 2) {
+                        Swal.fire('แจ้งเตือน', 'ไฟล์ไม่มีข้อมูล หรือมีเฉพาะหัวตาราง', 'warning');
+                        return;
+                    }
+                    importHeaders = json[0].map(function(h) { return String(h || '').trim(); });
+                    importRawData = json.slice(1);
+                    showColumnMapping();
+                } catch (err) {
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้: ' + err.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function fetchFromGoogleSheet() {
+            var url = document.getElementById('importGSheetUrl').value.trim();
+            if (!url) { Swal.fire('แจ้งเตือน', 'กรุณาวาง URL ของ Google Sheet', 'warning'); return; }
+
+            // Extract Sheet ID from URL
+            var match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+            if (!match) { Swal.fire('ข้อผิดพลาด', 'ไม่พบ Spreadsheet ID ใน URL ที่ระบุ', 'error'); return; }
+            var sheetId = match[1];
+
+            // Try to extract gid for specific sheet
+            var gidMatch = url.match(/gid=(\d+)/);
+            var sheetParam = 'Sheet1';
+
+            var apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/' + sheetParam + '?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+
+            Swal.fire({ title: 'กำลังดึงข้อมูลจาก Google Sheet...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+            fetch(apiUrl)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    Swal.close();
+                    if (!data.values || data.values.length < 2) {
+                        Swal.fire('แจ้งเตือน', 'ไม่พบข้อมูลใน Google Sheet หรือชีทว่างเปล่า', 'warning');
+                        return;
+                    }
+                    importHeaders = data.values[0].map(function(h) { return String(h || '').trim(); });
+                    importRawData = data.values.slice(1);
+
+                    var fnameEl = document.getElementById('importFileName');
+                    fnameEl.querySelector('span').textContent = 'Google Sheet: ' + sheetId.substring(0, 15) + '... (' + importRawData.length + ' แถว)';
+                    fnameEl.classList.remove('hidden');
+
+                    showColumnMapping();
+                })
+                .catch(function(err) {
+                    Swal.close();
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลจาก Google Sheet ได้: ' + err.message + '\n\nตรวจสอบว่า Sheet เป็นสาธารณะและ URL ถูกต้อง', 'error');
+                });
+        }
+
+        function showColumnMapping() {
+            var selectors = ['mapPrefix', 'mapFirstName', 'mapLastName', 'mapMajor'];
+            selectors.forEach(function(selId) {
+                var sel = document.getElementById(selId);
+                var firstOpt = sel.options[0].outerHTML;
+                sel.innerHTML = firstOpt;
+                importHeaders.forEach(function(h, i) {
+                    var opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = h || ('คอลัมน์ ' + (i + 1));
+                    sel.appendChild(opt);
+                });
+            });
+
+            // Auto-map by header name heuristics
+            importHeaders.forEach(function(h, i) {
+                var hl = h.toLowerCase();
+                if (hl.includes('คำนำหน้า') || hl === 'prefix' || hl === 'title') document.getElementById('mapPrefix').value = i;
+                if (hl.includes('ชื่อ') && !hl.includes('นามสกุล') && !hl.includes('คำนำหน้า') || hl === 'firstname' || hl === 'first_name') document.getElementById('mapFirstName').value = i;
+                if (hl.includes('นามสกุล') || hl === 'lastname' || hl === 'last_name' || hl === 'surname') document.getElementById('mapLastName').value = i;
+                if (hl.includes('สาขา') || hl === 'major' || hl === 'department') document.getElementById('mapMajor').value = i;
+            });
+
+            handleMapMajorChange();
+
+            document.getElementById('importStep2').classList.remove('hidden');
+            document.getElementById('importStep3').classList.add('hidden');
+            document.getElementById('importSubmitBtn').disabled = true;
+        }
+
+        function processImportMapping() {
+            var prefixCol = document.getElementById('mapPrefix').value;
+            var firstNameCol = document.getElementById('mapFirstName').value;
+            var lastNameCol = document.getElementById('mapLastName').value;
+            var majorCol = document.getElementById('mapMajor').value;
+            var fixedMajor = document.getElementById('fixedMajorInput').value.trim();
+
+            if (firstNameCol === '' || lastNameCol === '') {
+                Swal.fire('แจ้งเตือน', 'กรุณาเลือกคอลัมน์ "ชื่อ" และ "นามสกุล" อย่างน้อย', 'warning');
+                return;
+            }
+
+            // Build existing name set for duplicate detection
+            var existingSet = {};
+            rosterData.forEach(function(st) {
+                existingSet[st.firstName.toLowerCase() + '|' + st.lastName.toLowerCase()] = true;
+            });
+
+            importMappedStudents = [];
+            var dupCount = 0;
+
+            importRawData.forEach(function(row) {
+                var fn = String(row[parseInt(firstNameCol)] || '').trim();
+                var ln = String(row[parseInt(lastNameCol)] || '').trim();
+                if (!fn && !ln) return;
+
+                var prefix = prefixCol !== '' ? String(row[parseInt(prefixCol)] || '').trim() : '';
+                var major = majorCol !== '' ? String(row[parseInt(majorCol)] || '').trim() : fixedMajor;
+
+                var isDup = existingSet[fn.toLowerCase() + '|' + ln.toLowerCase()] || false;
+                if (isDup) dupCount++;
+
+                importMappedStudents.push({ prefix: prefix, firstName: fn, lastName: ln, major: major, isDuplicate: isDup });
+            });
+
+            // Show preview
+            var tbody = document.getElementById('importPreviewBody');
+            tbody.innerHTML = '';
+            importMappedStudents.slice(0, 50).forEach(function(st, idx) {
+                var tr = document.createElement('tr');
+                tr.className = st.isDuplicate ? 'bg-amber-50/60' : '';
+                tr.innerHTML =
+                    '<td class="p-2 text-slate-400">' + (idx + 1) + '</td>' +
+                    '<td class="p-2">' + st.prefix + '</td>' +
+                    '<td class="p-2 font-medium">' + st.firstName + '</td>' +
+                    '<td class="p-2 font-medium">' + st.lastName + '</td>' +
+                    '<td class="p-2">' + st.major + '</td>' +
+                    '<td class="p-2 text-center">' + (st.isDuplicate ? '<span class="text-amber-600 font-bold">ซ้ำ</span>' : '<span class="text-emerald-600">ใหม่</span>') + '</td>';
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('importPreviewTotal').textContent = 'ทั้งหมด ' + importMappedStudents.length + ' รายการ';
+            var dupsEl = document.getElementById('importPreviewDups');
+            if (dupCount > 0) {
+                dupsEl.textContent = '(พบชื่อซ้ำ ' + dupCount + ' รายการ)';
+                dupsEl.classList.remove('hidden');
+            } else {
+                dupsEl.classList.add('hidden');
+            }
+
+            document.getElementById('importStep3').classList.remove('hidden');
+            document.getElementById('importSubmitBtn').disabled = false;
+        }
+
+        function submitBatchImport() {
+            if (importMappedStudents.length === 0) {
+                Swal.fire('แจ้งเตือน', 'ไม่มีรายชื่อสำหรับนำเข้า', 'warning');
+                return;
+            }
+
+            var dupMode = 'skip';
+            var radios = document.querySelectorAll('input[name="dupMode"]');
+            radios.forEach(function(r) { if (r.checked) dupMode = r.value; });
+
+            Swal.fire({
+                title: 'ยืนยันการนำเข้ารายชื่อ?',
+                html: '<p class="text-sm text-slate-600">จะนำเข้า <strong>' + importMappedStudents.length + '</strong> รายการ ด้วยโหมด: <strong>' +
+                    (dupMode === 'skip' ? 'ข้ามรายการซ้ำ' : dupMode === 'overwrite' ? 'อัปเดตทับ' : 'นำเข้าทั้งหมด') + '</strong></p>',
+                icon: 'question', showCancelButton: true,
+                confirmButtonColor: '#10b981', cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยันนำเข้า', cancelButtonText: 'ยกเลิก'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังนำเข้าข้อมูล...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+                    var token = localStorage.getItem('authToken');
+                    var department = localStorage.getItem('userDepartment') || 'all';
+
+                    google.script.run.withSuccessHandler(function(resp) {
+                        Swal.close();
+                        if (resp && resp.success) {
+                            closeBatchImportModal();
+                            Swal.fire({ icon: 'success', title: 'นำเข้าสำเร็จ', text: resp.message, showConfirmButton: true, confirmButtonColor: '#10b981' });
+                            loadStudentRoster();
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: (resp && resp.error) || 'ไม่สามารถนำเข้าได้', confirmButtonColor: '#ea580c' });
+                        }
+                    }).withFailureHandler(function(err) {
+                        Swal.close();
+                        Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
+                    }).batchImportStudents(token, department, importMappedStudents, dupMode);
+                }
+            });
+        }
     </script>
 </body>
 
