@@ -694,6 +694,11 @@
                                 <i class="fa-solid fa-file-import"></i>
                                 <span>นำเข้ารายชื่อ</span>
                             </button>
+                            <button type="button" onclick="confirmClearRoster()"
+                                class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-xs hover:shadow-md transition-all active:scale-95">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>ล้างข้อมูลนิสิต</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1328,7 +1333,7 @@
                     <span
                         class="w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs flex items-center justify-center mt-0.5 shrink-0">6</span>
                     <p><strong>จัดการรายชื่อนิสิต (CRUD):</strong> สลับไปแท็บ "จัดการรายชื่อนิสิต" เพื่อเพิ่ม แก้ไข ลบรายชื่อนิสิตฝึกสอน
-                        หรือนำเข้ารายชื่อจำนวนมากจากไฟล์ Excel หรือลิงก์ Google Sheet สาธารณะได้</p>
+                        นำเข้ารายชื่อจำนวนมากจากไฟล์ Excel หรือลิงก์ Google Sheet สาธารณะ และสามารถล้างข้อมูลนิสิตทั้งหมดได้อย่างปลอดภัย</p>
                 </div>
             </div>
             <div class="pt-3 border-t border-slate-100 text-right">
@@ -2747,6 +2752,142 @@
                         Swal.close();
                         Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
                     }).deleteStudentCells(token, department, rowNumber);
+                }
+            });
+        }
+
+        // ---- Clear All Students ----
+        function confirmClearRoster() {
+            if (!rosterData || rosterData.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ไม่มีข้อมูล',
+                    text: 'ไม่มีรายชื่อนิสิตในระบบให้ล้างข้อมูล',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            var userDept = localStorage.getItem('userDepartment') || 'all';
+            var isAdmin = userDept.toLowerCase() === 'all';
+            var currentFilterDept = document.getElementById('rosterDeptFilter') ? document.getElementById('rosterDeptFilter').value : '';
+            var defaultTarget = isAdmin ? (currentFilterDept || 'all') : userDept;
+
+            function getCounts(target) {
+                var targetList = (target === 'all')
+                    ? rosterData
+                    : rosterData.filter(function(st) { return (st.major || '').toLowerCase() === target.toLowerCase(); });
+                var evalSum = targetList.reduce(function(acc, st) { return acc + (st.evalCount || 0); }, 0);
+                return { studentCount: targetList.length, evalCount: evalSum };
+            }
+
+            var initialCounts = getCounts(defaultTarget);
+
+            var scopeHtml = '';
+            if (isAdmin) {
+                var deptOptions = '<option value="all"' + (defaultTarget === 'all' ? ' selected' : '') + '>-- ทุกสาขาวิชาทั้งหมดในระบบ (' + rosterData.length + ' คน) --</option>';
+                if (rosterAllDepartments && rosterAllDepartments.length > 0) {
+                    rosterAllDepartments.forEach(function(d) {
+                        var dc = getCounts(d);
+                        deptOptions += '<option value="' + d + '"' + (defaultTarget === d ? ' selected' : '') + '>' + d + ' (' + dc.studentCount + ' คน)</option>';
+                    });
+                }
+
+                scopeHtml =
+                    '<div class="mb-3 text-left">' +
+                    '  <label for="swalClearTargetDept" class="block text-xs font-semibold text-slate-700 mb-1">เลือกขอบเขตสาขาวิชาที่จะล้างข้อมูล:</label>' +
+                    '  <select id="swalClearTargetDept" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-rose-500">' +
+                    deptOptions +
+                    '  </select>' +
+                    '</div>';
+            } else {
+                scopeHtml =
+                    '<div class="mb-3 p-2.5 bg-slate-50 rounded-xl text-xs text-slate-700 text-left border border-slate-200">' +
+                    '  <strong>สาขาวิชาที่ดำเนินการ:</strong> ' + userDept +
+                    '</div>';
+            }
+
+            var contentHtml =
+                '<div class="space-y-3 text-left">' +
+                scopeHtml +
+                '  <div id="swalClearSummaryBox" class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">' +
+                '    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-600"></i>คำเตือนความปลอดภัยระดับสูง</p>' +
+                '    <p>จำนวนนิสิตที่จะถูกลบ: <strong id="swalClearStudentCount">' + initialCounts.studentCount + '</strong> คน</p>' +
+                '    <p>ผลการประเมินที่ผูกอยู่: <strong id="swalClearEvalCount">' + initialCounts.evalCount + '</strong> รายการ (ผลประเมินในระบบจะไม่สูญหาย)</p>' +
+                '    <p class="text-[11px] text-rose-600 mt-1">ระบบจะลบเฉพาะเซลล์ A, B, C, E แล้วเลื่อนข้อมูลขึ้น โดยสูตร ARRAYFORMULA ทั้งหมดจะยังคงอยู่ครบถ้วน แต่รายชื่อที่ลบจะไม่สามารถกู้คืนได้</p>' +
+                '  </div>' +
+                '  <div>' +
+                '    <label for="swalConfirmText" class="block text-xs font-medium text-slate-700 mb-1">พิมพ์คำว่า <span class="font-bold text-rose-600 select-all">ลบข้อมูลทั้งหมด</span> เพื่อยืนยัน:</label>' +
+                '    <input id="swalConfirmText" type="text" placeholder="พิมพ์ ลบข้อมูลทั้งหมด ที่นี่..." autocomplete="off" class="w-full p-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-center font-bold text-rose-700">' +
+                '  </div>' +
+                '</div>';
+
+            Swal.fire({
+                title: 'ยืนยันการล้างข้อมูลนิสิต?',
+                html: contentHtml,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ล้างข้อมูลเดี๋ยวนี้',
+                cancelButtonText: 'ยกเลิก',
+                didOpen: function() {
+                    var targetSelect = document.getElementById('swalClearTargetDept');
+                    if (targetSelect) {
+                        targetSelect.addEventListener('change', function() {
+                            var counts = getCounts(this.value);
+                            document.getElementById('swalClearStudentCount').textContent = counts.studentCount;
+                            document.getElementById('swalClearEvalCount').textContent = counts.evalCount;
+                        });
+                    }
+                },
+                preConfirm: function() {
+                    var inputVal = (document.getElementById('swalConfirmText').value || '').trim();
+                    if (inputVal !== 'ลบข้อมูลทั้งหมด') {
+                        Swal.showValidationMessage('กรุณาพิมพ์คำว่า "ลบข้อมูลทั้งหมด" ให้ถูกต้องเพื่อยืนยัน');
+                        return false;
+                    }
+                    var selectedTarget = defaultTarget;
+                    var targetSelect = document.getElementById('swalClearTargetDept');
+                    if (targetSelect) {
+                        selectedTarget = targetSelect.value;
+                    }
+                    return selectedTarget;
+                }
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    var targetDept = result.value;
+                    Swal.fire({
+                        title: 'กำลังล้างข้อมูลใน Google Sheet...',
+                        allowOutsideClick: false,
+                        didOpen: function() { Swal.showLoading(); }
+                    });
+
+                    var token = localStorage.getItem('authToken');
+                    var dept = localStorage.getItem('userDepartment') || 'all';
+
+                    google.script.run.withSuccessHandler(function(resp) {
+                        Swal.close();
+                        if (resp && resp.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ล้างข้อมูลสำเร็จ',
+                                text: resp.message,
+                                confirmButtonColor: '#10b981'
+                            });
+                            loadStudentRoster();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: (resp && resp.error) || 'ไม่สามารถล้างข้อมูลได้',
+                                confirmButtonColor: '#ea580c'
+                            });
+                        }
+                    }).withFailureHandler(function(err) {
+                        Swal.close();
+                        Swal.fire('ข้อผิดพลาด', 'การเชื่อมต่อผิดพลาด: ' + err.message, 'error');
+                    }).clearStudentRoster(token, dept, targetDept);
                 }
             });
         }

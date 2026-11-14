@@ -826,6 +826,116 @@ function batchImportStudents(token, department, studentsList, duplicateMode) {
   }
 }
 
+/**
+ * ล้างข้อมูลรายชื่อนิสิตทั้งหมด หรือเฉพาะสาขาวิชาใน Sheet1
+ * โดยลบเฉพาะเซลล์ A, B, C และ E แล้วเลื่อนขึ้น (deleteCells Dimension.ROWS)
+ * ไม่ลบทั้งแถวเพื่อรักษา ARRAYFORMULA ในคอลัมน์ D และ F-Q ไว้ 100%
+ * @param {string} token - Session Token
+ * @param {string} department - สาขาวิชาของผู้ใช้
+ * @param {string} targetDepartment - สาขาวิชาเป้าหมายที่จะลบ หรือ 'all' สำหรับทุกสาขา (admin เท่านั้น)
+ * @return {object} { success: boolean, deletedCount: number, message: string }
+ */
+function clearStudentRoster(token, department, targetDepartment) {
+  if (!validateToken(token)) {
+    return { success: false, error: "การยืนยันตัวตนล้มเหลว Token ไม่ถูกต้อง" };
+  }
+  if (!department || typeof department !== 'string') {
+    return { success: false, error: "ไม่พบข้อมูลสิทธิ์สาขาวิชา" };
+  }
+
+  var userDeptAccess = department.trim().toLowerCase();
+  var target = (targetDepartment || '').trim().toLowerCase();
+
+  // ป้องกันการลบข้ามสาขาวิชา: หากไม่ใช่ admin (all) ให้บังคับลบเฉพาะสาขาตนเองเท่านั้น
+  if (userDeptAccess !== 'all') {
+    target = userDeptAccess;
+  } else if (!target) {
+    target = 'all';
+  }
+
+  try {
+    var ss = SpreadsheetApp.openById(STUDENT_ROSTER_SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(STUDENT_ROSTER_SHEET_NAME);
+    if (!sheet) {
+      return { success: false, error: 'ไม่พบชีท "' + STUDENT_ROSTER_SHEET_NAME + '"' };
+    }
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) {
+      lock.releaseLock();
+      return { success: true, deletedCount: 0, message: 'ไม่มีรายชื่อนิสิตในระบบให้ล้างข้อมูล' };
+    }
+
+    // สำรองสูตรแถวที่ 2 ในคอลัมน์ D และ F เป็นต้นไป เพื่อรับประกันว่า ARRAYFORMULA จะไม่สูญหาย
+    var lastCol = sheet.getLastColumn();
+    var formulasBackup = [];
+    if (lastCol >= 4) {
+      formulasBackup = sheet.getRange(2, 4, 1, lastCol - 3).getFormulas();
+    }
+
+    var deletedCount = 0;
+
+    if (target === 'all') {
+      // ลบข้อมูลนิสิตทุกสาขาวิชาทั้งหมด (จากแถวที่ 2 ถึง lastRow)
+      var numRows = lastRow - 1;
+      if (numRows > 0) {
+        // ลบเฉพาะเซลล์ A:C (คอลัมน์ 1-3) แล้วเลื่อนขึ้น
+        sheet.getRange(2, 1, numRows, 3).deleteCells(SpreadsheetApp.Dimension.ROWS);
+        // ลบเฉพาะเซลล์ E (คอลัมน์ 5) แล้วเลื่อนขึ้น
+        sheet.getRange(2, 5, numRows, 1).deleteCells(SpreadsheetApp.Dimension.ROWS);
+        deletedCount = numRows;
+      }
+    } else {
+      // ลบเฉพาะสาขาวิชาที่ระบุ
+      var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+      var rowsToDelete = [];
+
+      for (var i = 0; i < data.length; i++) {
+        var rFirst = data[i][1];
+        var rLast = data[i][2];
+        var rMajor = String(data[i][4] || '').trim().toLowerCase();
+
+        if ((rFirst || rLast) && rMajor === target) {
+          rowsToDelete.push(i + 2); // หมายเลขแถวใน Sheet (เริ่มที่ 2)
+        }
+      }
+
+      if (rowsToDelete.length === 0) {
+        lock.releaseLock();
+        return { success: true, deletedCount: 0, message: 'ไม่พบรายชื่อนิสิตในสาขาวิชาที่ระบุ' };
+      }
+
+      // วนลบจากแถวล่างขึ้นแถวบน (Descending order) เพื่อรักษา Index แถวเดิม
+      for (var j = rowsToDelete.length - 1; j >= 0; j--) {
+        var rowIdx = rowsToDelete[j];
+        sheet.getRange(rowIdx, 1, 1, 3).deleteCells(SpreadsheetApp.Dimension.ROWS);
+        sheet.getRange(rowIdx, 5, 1, 1).deleteCells(SpreadsheetApp.Dimension.ROWS);
+      }
+      deletedCount = rowsToDelete.length;
+    }
+
+    // กู้คืนสูตรแถวที่ 2 เพื่อป้องกันการผิดเพี้ยนของ ARRAYFORMULA
+    if (formulasBackup.length > 0 && formulasBackup[0].some(function(f) { return f !== ''; })) {
+      sheet.getRange(2, 4, 1, formulasBackup[0].length).setFormulas(formulasBackup);
+    }
+
+    lock.releaseLock();
+    var resultMsg = 'ล้างข้อมูลนิสิตสำเร็จ ' + deletedCount + ' รายการ';
+    Logger.log('clearStudentRoster: ' + resultMsg + ' (target=' + target + ')');
+    return {
+      success: true,
+      deletedCount: deletedCount,
+      message: resultMsg
+    };
+  } catch (e) {
+    console.error('เกิดข้อผิดพลาดใน clearStudentRoster: ' + e.toString());
+    return { success: false, error: 'เกิดข้อผิดพลาดในการล้างข้อมูลนิสิต: ' + e.message };
+  }
+}
+
 // --- ฟังก์ชันสำหรับการค้นหาและแก้ไขชื่อ-นามสกุลนิสิต (Batch Student Name Editor) ---
 
 /**
